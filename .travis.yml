@@ -1,0 +1,11 @@
+addons:
+  apt:
+    packages:
+    - strace
+    - libipc-run-perl
+
+language: c
+compiler: gcc
+
+script:
+  - make test

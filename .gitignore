@@ -1,3 +1,11 @@
+/src/ihlt
+core
+*~
+*.bak
+*.log
+*.orig
+*.rej
+
 # Object files
 *.o
 *.ko
