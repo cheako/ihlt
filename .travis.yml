@@ -1,0 +1,11 @@
+addons:
+  apt:
+    packages:
+    - libipc-run-perl
+    - valgrind
+
+language: c
+compiler: gcc
+
+script:
+  - make test
