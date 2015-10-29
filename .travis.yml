@@ -1,0 +1,34 @@
+# This will run on Travis' 'new' container-based infrastructure
+sudo: false
+
+# Blacklist
+branches:
+  except:
+  - gh-pages
+
+# Environment variables
+env:
+  global:
+  - GH_REPO_NAME: ihlt
+  - GH_REPO_REF: github.com/cheako/ihlt.git
+
+# Install dependencies
+addons:
+  apt:
+    packages:
+    - doxygen
+    - libipc-run-perl
+    - valgrind
+
+language: c
+compiler: gcc
+
+# Build your code e.g. by calling make
+script:
+  - make test
+
+# Generate and deploy documentation
+after_success:
+  - cd $TRAVIS_BUILD_DIR
+  - chmod +x .generateDocumentationAndDeploy.sh
+  - ./.generateDocumentationAndDeploy.sh

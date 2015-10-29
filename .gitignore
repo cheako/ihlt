@@ -1,3 +1,11 @@
+/src/ihlt
+core
+*~
+*.bak
+*.log
+*.orig
+*.rej
+
 # Object files
 *.o
 *.ko
@@ -30,3 +38,7 @@
 
 # Debug files
 *.dSYM/
+
+# Eclipse
+.project
+.cproject
