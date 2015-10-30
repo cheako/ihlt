@@ -74,6 +74,14 @@ int main(int argc, char *argv[]) {
 		if (setsockopt(listener, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int))
 				== -1)
 			goto tryagain;
+
+#ifdef SO_REUSEPORT
+		if (setsockopt(listener, SOL_SOCKET, SO_REUSEPORT, &yes, sizeof(int))
+				== -1)
+			goto tryagain;
+
+#endif
+
 		if (bind(listener, rp->ai_addr, rp->ai_addrlen) == 0)
 			break; /* Success */
 
