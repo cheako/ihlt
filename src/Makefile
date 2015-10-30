@@ -1,4 +1,6 @@
-ihlt : server.o
+ihlt : ConnectionsDoublyLinkedList.o server.o
+
+ConnectionsDoublyLinkedList.o : ConnectionsDoublyLinkedList.h
 
 clean:
 	rm -f *.o ihlt

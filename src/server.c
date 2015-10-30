@@ -30,6 +30,8 @@
 /* port we're listening on */
 #define PORT "4458"
 
+#include "ConnectionsDoublyLinkedList.h"
+
 int main(int argc, char *argv[]) {
 	/* master file descriptor list */
 	fd_set master;
@@ -115,74 +117,86 @@ int main(int argc, char *argv[]) {
 			exit(1);
 		}
 
-		/* run through the existing connections looking for data to be read */
-		int i;
-		for (i = 0; i <= fdmax; i++) {
-			if (FD_ISSET(i, &read_fds)) { /* we got one... */
-				if (i == listener) {
-					/* handle new connections */
-					/* client address */
-					struct sockaddr_storage clientaddr;
-					socklen_t addrlen;
-					/* newly accept()ed socket descriptor */
-					int newfd;
-					addrlen = sizeof(clientaddr);
-					if ((newfd = accept(listener,
-							(struct sockaddr *) &clientaddr, &addrlen)) == -1) {
-						perror("Warning accepting one new connection");
-					} else {
-						/* add to master set */
-						if (newfd > fdmax) /* keep track of the maximum */
-							if (newfd > FD_SETSIZE) {
-								close(newfd);
-								continue;
-							} else
-								fdmax = newfd;
+		if (FD_ISSET(listener, &read_fds)) { /* we got a new one... */
+			/* handle new connections */
+			struct ConnectionNode *TempNode = GetNewConnection();
+			TempNode->addr_len = sizeof(TempNode->addr);
+			if ((TempNode->fd = accept(listener,
+					(struct sockaddr *) &TempNode->addr, &TempNode->addr_len))
+					== -1) {
+				perror("Warning accepting one new connection");
+				free(TempNode);
+			} else {
+				/* add to master set */
+				if (TempNode->fd > fdmax) /* keep track of the maximum */
+					if (TempNode->fd > FD_SETSIZE) {
+						close(TempNode->fd);
+						free(TempNode);
+						TempNode = NULL;
+					} else
+						fdmax = TempNode->fd;
+				if (TempNode != NULL ) {
+					FD_SET(TempNode->fd, &master);
 
-						FD_SET(newfd, &master);
-						char host[NI_MAXHOST], service[NI_MAXSERV];
+					TempNode->getnameinfo = getnameinfo(
+							(struct sockaddr *) &TempNode->addr,
+							TempNode->addr_len, TempNode->host, NI_MAXHOST,
+							NULL, 0, 0);
 
-						j = getnameinfo((struct sockaddr *) &clientaddr,
-								addrlen, host, NI_MAXHOST, service, NI_MAXSERV,
-								NI_NUMERICSERV);
-						if (j != 0) {
-							fprintf(stderr, "getnameinfo: %s\n",
-									gai_strerror(j));
-						}
-						printf("%s: New connection from %s on socket %d\n",
-								argv[0], host, newfd);
-					}
-				} else {
-					/* handle data from a client */
-					/* buffer for client data */
-					char buf[1024];
-					int nbytes;
-					if ((nbytes = recv(i, buf, sizeof(buf), 0)) <= 0) {
-						/* got error or connection closed by client */
-						if (nbytes == 0)
-							/* connection closed */
-							printf("%s: socket %d hung up\n", argv[0], i);
-						else
-							perror("Negative recv");
-						/* close it... */
-						close(i);
-						/* remove from master set */
-						FD_CLR(i, &master);
-					} else {
-						/* we got some data from a client */
-						for (j = 0; j <= fdmax; j++) {
-							/* send to everyone! */
-							if (FD_ISSET(j, &master)) {
-								/* except the listener and ourselves */
-								if (j != listener && j != i)
-									if (send(j, buf, nbytes, 0) == -1)
-										perror("send() error lol!");
-							}
-						}
-					}
+					InsertConnectionBefore(&connections_head, TempNode);
+					printf("%s: New connection from %s on socket %d index %d\n",
+							argv[0], TempNode->host, TempNode->fd,
+							TempNode->index);
 				}
 			}
 		}
+
+		/* run through the existing connections looking for data to be read */
+		struct ConnectionNode *i = connections_head;
+		if (connections_head != NULL )
+			do {
+				if (FD_ISSET(i->fd, &read_fds)) { /* we got one... */
+					/* handle data from a client */
+					printf("%s: New data from %s on socket %d index %d\n",
+							argv[0], i->host, i->fd, i->index);
+					/* buffer for client data */
+					char buf[1024];
+					int nbytes;
+					if ((nbytes = recv(i->fd, buf, sizeof(buf), 0)) <= 0) {
+						/* got error or connection closed by client */
+						if (nbytes == 0)
+							/* connection closed */
+							printf(
+									"%s: socket to %s hung up on socket %d index %d\n",
+									argv[0], i->host, i->fd, i->index);
+						else
+							perror("Negative recv");
+						/* close it... */
+						close(i->fd);
+						/* remove from master set */
+						FD_CLR(i->fd, &master);
+						/* step back and remove this connection */
+						i = RemoveConnection(i);
+						if (i == NULL )
+							break;
+					} else {
+						/* we got some data from a client */
+						printf(
+								"%s: socket recv from %s on socket %d index %d\n",
+								argv[0], i->host, i->fd, i->index);
+						struct ConnectionNode *j;
+						for (j = i->next; j != i; j = j->next) {
+							printf(
+									"%s: socket send to %s on socket %d index %d\n",
+									argv[0], i->host, j->fd, j->index);
+							if (send(j->fd, buf, nbytes, 0) == -1)
+								perror("Negative send");
+						}
+
+					}
+				}
+				i = i->next;
+			} while (i != connections_head);
 	}
 	return 0;
 }
