@@ -32,6 +32,28 @@
 
 #include "ConnectionsDoublyLinkedList.h"
 
+void LineLocator(struct ConnectionNode *conn) {
+	/* look for the end of the line */
+	struct ConnectionNode *j;
+	for (j = conn->next; j != conn; j = j->next) {
+		printf("socket send to %s on socket %d index %d\n", j->host, j->fd,
+				j->index);
+		if (send(j->fd, conn->buf, conn->nbytes, 0) == -1)
+			perror("Negative send");
+	}
+	conn->buf = NULL;
+	conn->nbytes = 0;
+}
+
+void ProccessInput(struct ConnectionNode *conn, char *buf, size_t nbytes) {
+	/* we got some data from a client */
+	printf("socket recv from %s on socket %d index %d\n", conn->host, conn->fd,
+			conn->index);
+	conn->nbytes += nbytes;
+	conn->buf = buf;
+	LineLocator(conn);
+}
+
 void OpenConnection(int listener, int *fdmax, fd_set *master, char *name) { /* we got a new one... */
 	/* handle new connections */
 	struct ConnectionNode *TempNode = GetNewConnection();
@@ -165,7 +187,7 @@ int main(int argc, char *argv[]) {
 					/* buffer for client data */
 					char buf[1024];
 					int nbytes;
-					if ((nbytes = recv(i->fd, buf, sizeof(buf), 0)) <= 0) {
+					if ((nbytes = recv(i->fd, buf, sizeof(buf) - 1, 0)) <= 0) {
 						/* got error or connection closed by client */
 						if (nbytes == 0)
 							/* connection closed */
@@ -183,19 +205,9 @@ int main(int argc, char *argv[]) {
 						if (i == NULL )
 							break;
 					} else {
-						/* we got some data from a client */
-						printf(
-								"%s: socket recv from %s on socket %d index %d\n",
-								argv[0], i->host, i->fd, i->index);
-						struct ConnectionNode *j;
-						for (j = i->next; j != i; j = j->next) {
-							printf(
-									"%s: socket send to %s on socket %d index %d\n",
-									argv[0], i->host, j->fd, j->index);
-							if (send(j->fd, buf, nbytes, 0) == -1)
-								perror("Negative send");
-						}
-
+						/* Ensure this is an ansi string */
+						buf[nbytes] = '\0';
+						ProccessInput(i, buf, nbytes);
 					}
 				}
 				i = i->next;
