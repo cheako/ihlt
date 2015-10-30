@@ -46,6 +46,7 @@ void LineLocator(struct ConnectionNode *conn) {
 		if (send(j->fd, conn->buf, conn->nbytes, 0) == -1)
 			perror("Negative send");
 	}
+	free(conn->buf);
 	conn->buf = NULL;
 	conn->nbytes = 0;
 }
@@ -55,7 +56,14 @@ void ProccessInput(struct ConnectionNode *conn, char *buf, size_t nbytes) {
 	printf("socket recv from %s on socket %d index %d\n", conn->host, conn->fd,
 			conn->index);
 	conn->nbytes += nbytes;
-	conn->buf = buf;
+	if (conn->buf != NULL ) {
+		char *t = NULL;
+		while (t == NULL )
+			t = realloc(conn->buf, conn->nbytes + 1);
+		strncat(t, buf, conn->nbytes);
+		conn->buf = t;
+	} else
+		conn->buf = strdup(buf);
 	LineLocator(conn);
 }
 
