@@ -27,4 +27,13 @@
 
 extern int sock_send(int, char *, size_t);
 
+struct ListenerOptions {
+	char *nodename;
+	char *servname;
+	/* server address */
+	struct addrinfo hints;
+};
+
+extern void EnterListener(struct ListenerOptions *);
+
 #endif /* SERVER_H_ */

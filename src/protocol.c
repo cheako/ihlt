@@ -36,7 +36,7 @@
  * Usage: bye
  */
 int quit_func(struct ConnectionNode *conn, int argc, char **argv) {
-	exit(0);
+	exit(EXIT_SUCCESS);
 	return 0;
 }
 
