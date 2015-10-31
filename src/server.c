@@ -26,12 +26,43 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <signal.h>
+#include <errno.h>
+#include <fcntl.h>
 #include <stdbool.h>
 #include <string.h>
 /* port we're listening on */
 #define PORT "4458"
 
-#include "ConnectionsDoublyLinkedList.h"
+#include "server.h"
+
+// Send/receive raw data
+int sock_send(int fd, char *src, size_t size) {
+	int offset = 0;
+
+	if (!src)
+		return -1;
+
+	while (offset != size) {
+		// write isn't guaranteed to send the entire string at once,
+		// so we have to sent it in a loop like this
+		int sent = send(fd, ((char *) src) + offset, size - offset, 0);
+		if (sent == -1) {
+			if (errno != EAGAIN)
+				//shutdown(fd, SHUT_RDWR);
+				return sent;
+			continue;
+		} else if (sent == 0) {
+			// when this returns zero, it generally means
+			// we got disconnected
+			return sent + offset;
+		}
+
+		offset += sent;
+	}
+
+	return offset;
+}
 
 void LineLocator(struct ConnectionNode *conn) {
 	/* look for the end of the line */
@@ -49,7 +80,7 @@ void LineLocator(struct ConnectionNode *conn) {
 		/* Reverse this so we know the next result. */
 		if (str1 == NULL ) {
 			if (ntoken != NULL || endswell) {
-				char *str2, *saveptr2, *subtoken, *t = NULL;
+				char *str2, *saveptr2, *subtoken;
 				char **argv = NULL;
 				while (argv == NULL )
 					argv = malloc(0);
@@ -60,38 +91,19 @@ void LineLocator(struct ConnectionNode *conn) {
 					if (subtoken == NULL )
 						break;
 					void *i = NULL;
-					while (i == NULL)
+					while (i == NULL )
 						i = realloc(argv, sizeof(void*) * (argc + 1));
 					argv = i;
 					argv[argc++] = subtoken;
-					if (t != NULL ) {
-						size_t n = strlen(t) + strlen(subtoken) + 4;
-						i = NULL;
-						while (i == NULL )
-							i = realloc(t, n);
-						t = i;
-						strncat(t, ",", n);
-						strncat(t, subtoken, n);
-					} else {
-						{
-							size_t n = strlen(subtoken) + 4;
-							t = NULL;
-							while (t == NULL )
-								t = malloc(n);
-							strncpy(t, subtoken, n);
-						}
-					}
 				}
-				strcat(t, "!\n");
-				struct ConnectionNode *dest;
-				for (dest = conn->next; dest != conn; dest = dest->next) {
-					printf("socket send to %s on socket %d index %d\n",
-							dest->host, dest->fd, dest->index);
-					if (send(dest->fd, t, strlen(t), 0) == -1)
-						perror("Negative send");
-				}
-				free(t);
-				t = NULL;
+				CommandFunc f;
+				f = get_command_function(argv[0]);
+				if (!f) {
+					write(conn->fd,
+							"502 Bad command or it is not implemented here.\r\n",
+							48);
+				} else
+					f(conn, argc, argv);
 				if (ntoken == NULL ) {
 					free(conn->buf);
 					conn->buf = NULL;
