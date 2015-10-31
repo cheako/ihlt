@@ -26,13 +26,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <signal.h>
 #include <errno.h>
-#include <fcntl.h>
 #include <stdbool.h>
 #include <string.h>
-/* port we're listening on */
-#define PORT "4458"
 
 #include "server.h"
 
@@ -151,7 +147,7 @@ void ProccessInput(struct ConnectionNode *conn, char *buf, size_t nbytes) {
 	}
 }
 
-void OpenConnection(int listener, int *fdmax, fd_set *master, char *name) { /* we got a new one... */
+void OpenConnection(int listener, int *fdmax, fd_set *master) { /* we got a new one... */
 	/* handle new connections */
 	struct ConnectionNode *TempNode = GetNewConnection();
 	TempNode->addr_len = sizeof(TempNode->addr);
@@ -168,6 +164,7 @@ void OpenConnection(int listener, int *fdmax, fd_set *master, char *name) { /* w
 				TempNode = NULL;
 			} else
 				*fdmax = TempNode->fd;
+
 		if (TempNode != NULL ) {
 			TempNode->getnameinfo = getnameinfo(
 					(struct sockaddr *) &TempNode->addr,
@@ -175,9 +172,8 @@ void OpenConnection(int listener, int *fdmax, fd_set *master, char *name) { /* w
 					NULL, 0, 0);
 
 			InsertConnectionBefore(&connections_head, TempNode);
-			printf("%s: New connection from %s on socket %d index %d\n",
-					name, TempNode->host, TempNode->fd,
-					TempNode->index);
+			printf("New connection from %s on socket %d index %d\n",
+					TempNode->host, TempNode->fd, TempNode->index);
 
 			/* add to master set */
 			FD_SET(TempNode->fd, master);
@@ -185,14 +181,11 @@ void OpenConnection(int listener, int *fdmax, fd_set *master, char *name) { /* w
 	}
 }
 
-int main(int argc, char *argv[]) {
+void EnterListener(struct ListenerOptions *opts) {
 	/* master file descriptor list */
 	fd_set master;
 	/* temp file descriptor list for select() */
 	fd_set read_fds;
-	/* server address */
-	struct addrinfo hints;
-	struct addrinfo *result, *rp;
 	/* maximum file descriptor number */
 	int fdmax;
 	/* listening socket descriptor */
@@ -200,17 +193,18 @@ int main(int argc, char *argv[]) {
 	/* for setsockopt() SO_REUSEADDR, below */
 	int yes = 1;
 	int j;
+	struct addrinfo *result, *rp;
 
 	/* clear the master and temp sets */
 	FD_ZERO(&master);
 	FD_ZERO(&read_fds);
 
-	memset(&hints, 0, sizeof(struct addrinfo));
-	hints.ai_family = AF_UNSPEC; /* Allow IPv4 or IPv6 */
-	hints.ai_socktype = SOCK_STREAM; /* Datagram socket */
-	hints.ai_flags = AI_PASSIVE;
+	memset(&opts->hints, 0, sizeof(struct addrinfo));
+	opts->hints.ai_family = AF_UNSPEC; /* Allow IPv4 or IPv6 */
+	opts->hints.ai_socktype = SOCK_STREAM; /* Datagram socket */
+	opts->hints.ai_flags = AI_PASSIVE;
 
-	j = getaddrinfo(NULL, PORT, &hints, &result);
+	j = getaddrinfo(opts->nodename, opts->servname, &opts->hints, &result);
 	if (j != 0) {
 		fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(j));
 		exit(EXIT_FAILURE);
@@ -271,7 +265,7 @@ int main(int argc, char *argv[]) {
 		}
 
 		if (FD_ISSET(listener, &read_fds))
-			OpenConnection(listener, &fdmax, &master, argv[0]);
+			OpenConnection(listener, &fdmax, &master);
 
 		/* run through the existing connections looking for data to be read */
 		struct ConnectionNode *i = connections_head;
@@ -279,8 +273,8 @@ int main(int argc, char *argv[]) {
 			do {
 				if (FD_ISSET(i->fd, &read_fds)) { /* we got one... */
 					/* handle data from a client */
-					printf("%s: New data from %s on socket %d index %d\n",
-							argv[0], i->host, i->fd, i->index);
+					printf("New data from %s on socket %d index %d\n", i->host,
+							i->fd, i->index);
 					/* buffer for client data */
 					char buf[1024];
 					int nbytes;
@@ -289,8 +283,8 @@ int main(int argc, char *argv[]) {
 						if (nbytes == 0)
 							/* connection closed */
 							printf(
-									"%s: socket to %s hung up on socket %d index %d\n",
-									argv[0], i->host, i->fd, i->index);
+									"socket to %s hung up on socket %d index %d\n",
+									i->host, i->fd, i->index);
 						else
 							perror("Negative recv");
 						/* close it... */
@@ -310,5 +304,4 @@ int main(int argc, char *argv[]) {
 				i = i->next;
 			} while (i != connections_head);
 	}
-	return 0;
 }
