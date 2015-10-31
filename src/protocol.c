@@ -142,9 +142,9 @@ int next_func(struct ConnectionNode *conn, int argc, char **argv) {
 	return 0;
 }
 
-static struct client_function commands[] = { { "ping", echo_func },
-		{ "quit", quit_func }, { "wall", wall_func }, { "prev", prev_func }, {
-				"next", next_func }, { NULL, NULL }, };
+static struct client_function commands[] = { { "ping", echo_func }, { "quit",
+		quit_func }, { "wall", wall_func }, { "prev", prev_func }, { "next",
+		next_func }, { NULL, NULL }, };
 
 CommandFunc get_command_function(char *cmd) {
 	int i;

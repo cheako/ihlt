@@ -20,8 +20,7 @@
  * @brief Doubly Linked List used for each connection
  * @author Mike Mestnik
  *
- * Example from:
- * - [https://gist.github.com/mycodeschool/7429492]
+ * Example from: [https://gist.github.com/mycodeschool/7429492]
  */
 
 #ifndef ConnectionsDoublyLinkedList_H_
