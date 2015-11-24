@@ -1,5 +1,5 @@
 /*  ihlt hopefully the last tracker: seed your network.
- *  Copyright (C) 2015  Michael Mestnik <cheako+github_com@mikemestnik.net>
+ *  Copyright (C) 2015,2017  Michael Mestnik <cheako+github_com@mikemestnik.net>
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU Affero General Public License as
@@ -56,8 +56,6 @@ void InsertConnectionBefore(struct ConnectionNode **a, struct ConnectionNode *b)
 
 struct ConnectionNode *RemoveConnection(struct ConnectionNode *rm) {
 	struct ConnectionNode *r;
-	if (rm->buf != NULL)
-		free(rm->buf);
 	if (rm == rm->prev) {
 		if (rm == connections_head)
 			connections_head = NULL;
@@ -69,6 +67,8 @@ struct ConnectionNode *RemoveConnection(struct ConnectionNode *rm) {
 	if (connections_head == rm)
 		connections_head = rm->next;
 	r = rm->prev;
+
+	rm->handler->free(rm, rm->handler);
 	free(rm);
 	return r;
 }

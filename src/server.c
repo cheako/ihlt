@@ -1,5 +1,5 @@
 /*  ihlt hopefully the last tracker: seed your network.
- *  Copyright (C) 2015  Michael Mestnik <cheako+github_com@mikemestnik.net>
+ *  Copyright (C) 2015,2017  Michael Mestnik <cheako+github_com@mikemestnik.net>
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU Affero General Public License as
@@ -37,7 +37,7 @@
 
 #include "server.h"
 
-// Send/receive raw data
+/** Send/receive raw dataa */
 int sock_send(int fd, char *src, size_t size) {
 	int offset = 0;
 
@@ -65,18 +65,37 @@ int sock_send(int fd, char *src, size_t size) {
 	return offset;
 }
 
-static void LineLocator(struct ConnectionNode *conn) {
+struct ProccessInputHandler {
+	void (*func)(struct ConnectionNode *, struct ProccessInputHandler *, char *,
+			size_t);
+	void (*free)(struct ConnectionNode *, struct ProccessInputHandler *);
+	struct ConnectionNodeHandler *prev;
+	char * buf;
+	size_t nbytes;
+};
+
+static void ProccessInputFree(struct ConnectionNode *i,
+		struct ProccessInputHandler *h) {
+	if (h->prev != NULL)
+		h->prev->free(i, h->prev);
+	if (h->buf != NULL)
+		free(h->buf);
+	free(h);
+}
+
+static void LineLocator(struct ConnectionNode *conn,
+		struct ProccessInputHandler *h) {
 	/* look for the end of the line */
 	char *str1, *saveptr1, *ntoken, *token;
 	bool endswell = false;
-	switch (conn->buf[conn->nbytes - 1]) {
+	switch (h->buf[h->nbytes - 1]) {
 	case '\r':
 	case '\n':
 		endswell = true;
 		break;
 	};
 
-	for (str1 = conn->buf;; str1 = NULL) {
+	for (str1 = h->buf;; str1 = NULL) {
 		ntoken = strtok_r(str1, "\r\n", &saveptr1);
 		/* Reverse this so we know the next result. */
 		if (str1 == NULL) {
@@ -107,16 +126,16 @@ static void LineLocator(struct ConnectionNode *conn) {
 					f(conn, argc, argv);
 				free(argv);
 				if (ntoken == NULL) {
-					free(conn->buf);
-					conn->buf = NULL;
-					conn->nbytes = 0;
+					free(h->buf);
+					h->buf = NULL;
+					h->nbytes = 0;
 					break;
 				}
 			} else {
-				conn->nbytes = strlen(token);
+				h->nbytes = strlen(token);
 				str1 = strdup(token);
-				free(conn->buf);
-				conn->buf = str1;
+				free(h->buf);
+				h->buf = str1;
 				break;
 			}
 		}
@@ -124,9 +143,10 @@ static void LineLocator(struct ConnectionNode *conn) {
 	}
 }
 
-static void ProccessInput(struct ConnectionNode *conn, char *buf, size_t nbytes) {
+static void ProccessInput(struct ConnectionNode *conn,
+		struct ProccessInputHandler *h, char *buf, size_t nbytes) {
 	/* we got some data from a client */
-	conn->nbytes += nbytes;
+	h->nbytes += nbytes;
 	printf("socket recv from %s on socket %d index %d\n", conn->host, conn->fd,
 			conn->index);
 	if (strnlen(buf, nbytes) != nbytes) {
@@ -134,22 +154,22 @@ static void ProccessInput(struct ConnectionNode *conn, char *buf, size_t nbytes)
 		printf("socket to %s send non-string\n", conn->host);
 		char e[42];
 		sprintf(e, "551 Invalid string %4d bytes discarded\r\n",
-				(unsigned int) conn->nbytes);
+				(unsigned int) h->nbytes);
 		write(conn->fd, &e, 41);
-		if (conn->buf)
-			free(conn->buf);
-		conn->buf = NULL;
-		conn->nbytes = 0;
+		if (h->buf)
+			free(h->buf);
+		h->buf = NULL;
+		h->nbytes = 0;
 	} else {
-		if (conn->buf != NULL) {
+		if (h->buf != NULL) {
 			char *t = NULL;
 			while (t == NULL)
-				t = realloc(conn->buf, conn->nbytes + 1);
-			strncat(t, buf, conn->nbytes);
-			conn->buf = t;
+				t = realloc(h->buf, h->nbytes + 1);
+			strncat(t, buf, h->nbytes);
+			h->buf = t;
 		} else
-			conn->buf = strdup(buf);
-		LineLocator(conn);
+			h->buf = strdup(buf);
+		LineLocator(conn, h);
 	}
 }
 
@@ -169,10 +189,22 @@ static void OpenConnection(int listener, int *fdmax, fd_set *master) { /* we got
 				TempNode = NULL;
 			} else
 				*fdmax = TempNode->fd;
+
 		if (TempNode != NULL) {
 			TempNode->getnameinfo = getnameinfo(
 					(struct sockaddr *) &TempNode->addr, TempNode->addr_len,
 					TempNode->host, NI_MAXHOST, NULL, 0, 0);
+
+			struct ProccessInputHandler *handler = NULL;
+			while (handler == NULL)
+				handler = malloc(sizeof(struct ProccessInputHandler));
+			handler->func = &ProccessInput;
+			handler->free = &ProccessInputFree;
+			handler->prev = NULL;
+			handler->nbytes = 0;
+			handler->buf = NULL;
+
+			TempNode->handler = (struct ConnectionNodeHandler *) handler;
 
 			InsertConnectionBefore(&connections_head, TempNode);
 			printf("New connection from %s on socket %d index %d\n",
@@ -301,7 +333,7 @@ void EnterListener(struct ListenerOptions *opts) {
 					} else {
 						/* Ensure this is an ansi string */
 						buf[nbytes] = '\0';
-						ProccessInput(i, buf, nbytes);
+						i->handler->func(i, i->handler, buf, nbytes);
 					}
 				}
 				i = i->next;

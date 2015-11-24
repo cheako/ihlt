@@ -1,5 +1,5 @@
 /*  ihlt hopefully the last tracker: seed your network.
- *  Copyright (C) 2015  Michael Mestnik <cheako+github_com@mikemestnik.net>
+ *  Copyright (C) 2015,2017  Michael Mestnik <cheako+github_com@mikemestnik.net>
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU Affero General Public License as
@@ -28,6 +28,8 @@
 
 #include <netdb.h>
 
+/*! @brief handler for new input and closing connection */
+struct ConnectionNodeHandler;
 /*! @brief used for each connection */
 struct ConnectionNode {
 	struct ConnectionNode * prev; /*! @brief DDL. */
@@ -37,9 +39,13 @@ struct ConnectionNode {
 	int getnameinfo; /*! @brief function return value not used */
 	struct sockaddr_storage addr; /*! @brief client address */
 	socklen_t addr_len; /*! @brief length of address buffer */
-	char * buf; /*! @brief input buffer */
-	size_t nbytes; /*! @brief size */
 	char host[NI_MAXHOST]; /*! @brief string returned from getnameinfo */
+	struct ConnectionNodeHandler {
+		void (*func)(struct ConnectionNode *, struct ConnectionNodeHandler *,
+				char *, size_t);
+		void (*free)(struct ConnectionNode *, struct ConnectionNodeHandler *);
+		struct ConnectionNodeHandler *prev; /*! @brief previous handler, forming a chain */
+	}*handler;
 };
 
 /*! @brief how big is out mighty hero? */
