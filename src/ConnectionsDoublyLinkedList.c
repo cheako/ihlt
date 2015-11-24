@@ -42,11 +42,15 @@ void InsertConnectionBefore(struct ConnectionNode **a, struct ConnectionNode *b)
 	}
 }
 
+void FreeHandler(struct ConnectionNodeHandler *x) {
+	if(x->prev != NULL)
+		FreeHandler(x->prev);
+	x->free(x);
+}
+
 //Removes a Connection from doubly linked list.
 struct ConnectionNode *RemoveConnection(struct ConnectionNode *rm) {
 	struct ConnectionNode *r;
-	if (rm->buf != NULL )
-		free(rm->buf);
 	if (rm == rm->prev) {
 		if (rm == connections_head)
 			connections_head = NULL;
@@ -58,6 +62,8 @@ struct ConnectionNode *RemoveConnection(struct ConnectionNode *rm) {
 	if (connections_head == rm)
 		connections_head = rm->next;
 	r = rm->prev;
+
+	FreeHandler(rm->handler);
 	free(rm);
 	return r;
 }

@@ -6,6 +6,7 @@
 
 #include <netdb.h>
 
+struct ConnectionNodeHandler;
 struct ConnectionNode {
 	struct ConnectionNode * prev;
 	struct ConnectionNode * next;
@@ -16,9 +17,12 @@ struct ConnectionNode {
 	/* client address */
 	struct sockaddr_storage addr;
 	socklen_t addr_len;
-	char * buf;
-	size_t nbytes;
 	char host[NI_MAXHOST];
+	struct ConnectionNodeHandler {
+		void (*func)(struct ConnectionNode *, char *, size_t);
+		void (*free)(struct ConnectionNodeHandler *);
+		struct ConnectionNodeHandler *prev;
+	} *handler;
 };
 
 #define CONNECTION_NODE_SIZE sizeof(struct ConnectionNode)
