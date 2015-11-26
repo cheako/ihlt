@@ -41,6 +41,7 @@
 #define DAEMON_NAME "ihlt"
 
 #include "server.h"
+#include "relay_commands.h"
 
 int pidFilehandle = -1;
 
@@ -258,6 +259,7 @@ void main(int argc, char *argv[]) {
 
 	syslog(LOG_INFO, "Daemon running");
 
+	init_relay();
 	EnterListener(&lopts);
 	exit(EXIT_SUCCESS);
 }
