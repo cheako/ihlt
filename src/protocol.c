@@ -19,132 +19,44 @@
  *   https://github.com/bytemine/lcdproc/tree/master/server/commands
  */
 
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
 
 #include "protocol.h"
 
-/*****************************************************************************
- * The client should say "bye" before disconnecting
- *
- * The function does not respond to the client: it simply cuts connection
- *
- * Usage: bye
- */
-int quit_func(struct ConnectionNode *conn, int argc, char **argv) {
-	exit(EXIT_SUCCESS);
-}
+struct client_function *commands;
 
-/***************************************************************
- * Debugging only..  prints out a list of arguments it receives
- */
-int echo_func(struct ConnectionNode *conn, int argc, char **argv) {
-	int i;
-	size_t n;
-	char *t = NULL;
+void register_commands(const struct client_function insert[]) {
+	int sizeofa, sizeofb;
+	struct client_function *nu = NULL;
 
-	printf("socket send to %s on socket %d index %d\n", conn->host, conn->fd,
-			conn->index);
-	while (t == NULL )
-		t = strdup("211 pong:");
-	for (i = 1; i < argc; i++) {
-		char *r = NULL;
-		n = strlen(t) + strlen(argv[i]) + 4;
-		while (r == NULL )
-			r = realloc(t, n);
-		t = r;
-		strncat(t, " ", n);
-		strncat(t, argv[i], n);
+	for (sizeofb = 0; insert[sizeofb++].keyword != NULL ; );
+
+	if(commands != NULL){
+		size_t i[2];
+		i[0] = sizeofb * sizeof(struct client_function);
+
+		for (sizeofa = 0; commands[sizeofa].keyword != NULL; sizeofa++);
+		i[1] = sizeofa * sizeof(struct client_function);
+		i[2] = i[0] + i[1];
+
+		while(nu == NULL)
+			nu = realloc(commands,i[2]);
+
+		memcpy(nu + sizeofa, insert, i[0]);
+
+		commands = nu;
+	} else {
+		size_t i = sizeofb * sizeof(struct client_function);
+
+		while(nu == NULL)
+			nu = malloc(i);
+
+		memcpy(nu, insert, i);
+
+		commands = nu;
 	}
-	strncat(t, "\r\n", n);
-	sock_send(conn->fd, t, strlen(t));
-	free(t);
-	return 0;
 }
-
-int wall_func(struct ConnectionNode *conn, int argc, char **argv) {
-	int i;
-	size_t n;
-	char *t = NULL;
-
-	while (t == NULL )
-		t = strdup("211 wall:");
-	for (i = 1; i < argc; i++) {
-		char *r = NULL;
-		n = strlen(t) + strlen(argv[i]) + 4;
-		while (r == NULL )
-			r = realloc(t, n);
-		t = r;
-		strncat(t, " ", n);
-		strncat(t, argv[i], n);
-	}
-	strncat(t, "\r\n", n);
-	struct ConnectionNode *dest;
-	for (dest = conn->next; dest != conn; dest = dest->next) {
-		char *r = NULL;
-		printf("socket send to %s on socket %d index %d\n", dest->host,
-				dest->fd, dest->index);
-		sock_send(dest->fd, t, strlen(t));
-	}
-	free(t);
-	return 0;
-}
-
-int prev_func(struct ConnectionNode *conn, int argc, char **argv) {
-	int i;
-	size_t n;
-	char *t = NULL;
-
-	printf("socket send to %s on socket %d index %d\n", conn->host,
-			conn->prev->fd, conn->prev->index);
-	while (t == NULL )
-		t = strdup("211 next:");
-	for (i = 1; i < argc; i++) {
-		char *r = NULL;
-		n = strlen(t) + strlen(argv[i]) + 4;
-		while (r == NULL )
-			r = realloc(t, n);
-		t = r;
-		strncat(t, " ", n);
-		strncat(t, argv[i], n);
-	}
-	strncat(t, "\r\n", n);
-	sock_send(conn->prev->fd, t, strlen(t));
-	free(t);
-	return 0;
-}
-
-int next_func(struct ConnectionNode *conn, int argc, char **argv) {
-	int i;
-	size_t n;
-	char *t = NULL;
-
-	printf("socket send to %s on socket %d index %d\n", conn->next->host,
-			conn->next->fd, conn->next->index);
-	while (t == NULL )
-		t = strdup("211 prev:");
-	for (i = 1; i < argc; i++) {
-		char *r = NULL;
-		n = strlen(t) + strlen(argv[i]) + 4;
-		while (r == NULL )
-			r = realloc(t, n);
-		t = r;
-		strncat(t, " ", n);
-		strncat(t, argv[i], n);
-	}
-	strncat(t, "\r\n", n);
-	sock_send(conn->next->fd, t, strlen(t));
-	free(t);
-	return 0;
-}
-
-static struct client_function commands[] = { { "ping", echo_func },
-		{ "quit", quit_func }, { "wall", wall_func }, { "prev", prev_func }, {
-				"next", next_func }, { NULL, NULL }, };
 
 CommandFunc get_command_function(char *cmd) {
 	int i;

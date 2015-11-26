@@ -30,6 +30,7 @@
 #define PORT "4458"
 
 #include "server.h"
+#include "relay_commands.h"
 
 /* example from: http://www.4pmp.com/2009/12/a-simple-daemon-in-c/ */
 #define DAEMON_NAME "ihlt"
@@ -254,6 +255,7 @@ void main(int argc, char *argv[]) {
 
 	syslog(LOG_INFO, "Daemon running");
 
+	init_relay();
 	EnterListener(&lopts);
 	exit(EXIT_SUCCESS);
 }

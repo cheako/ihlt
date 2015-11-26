@@ -16,28 +16,15 @@
  */
 
 /* Example from:
- *   https://github.com/bytemine/lcdproc/tree/master/server/commands
+ *   
  */
 
-#ifndef PROTOCOL_H_
-#define PROTOCOL_H_
 
-#include "ConnectionsDoublyLinkedList.h"
-#include "server.h"
+#ifndef RELAY_COMMANDS_H_
+#define RELAY_COMMANDS_H_
 
-/*
- * The function list for clients is stored in a table, and the items each
- * point to a function to call, defined below.
- */
+#include "protocol.h"
 
-typedef int (*CommandFunc)(struct ConnectionNode *, int, char **);
+void init_relay();
 
-struct client_function {
-	char * keyword;
-	CommandFunc function;
-};
-
-void register_commands(const struct client_function []);
-CommandFunc get_command_function(char *);
-
-#endif /* PROTOCOL_H_ */
+#endif /* RELAY_COMMANDS_H_ */
