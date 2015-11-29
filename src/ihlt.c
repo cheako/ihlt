@@ -26,6 +26,8 @@
 #include <getopt.h>
 #include <syslog.h>
 
+#include <gpgme.h>
+
 /* port we're listening on phone coded msg */
 #define PORT "4458"
 
