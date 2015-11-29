@@ -1,3 +1,5 @@
+CFLAGS += -D_FILE_OFFSET_BITS=64 -DLARGEFILE_SOURCE=1
+
 ihlt : ConnectionsDoublyLinkedList.o protocol.o server.o relay_commands.o
 
 ConnectionsDoublyLinkedList.o : ConnectionsDoublyLinkedList.h
