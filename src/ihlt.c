@@ -24,6 +24,7 @@
 #include <signal.h>
 #include <string.h>
 #include <getopt.h>
+#include <error.h>
 #include <syslog.h>
 
 #include <gpgme.h>
@@ -169,6 +170,41 @@ void main(int argc, char *argv[]) {
 	void (*bg)(char *) = &daemonize;
 	char *pidfile = "/tmp/ihlt.pid";
 	int log_level = LOG_DEBUG, log_opts = LOG_PID;
+
+	gpgme_check_version(NULL);
+
+	gpgme_ctx_t gm_ctx;
+	gpgme_error_t err = gpgme_new (&gm_ctx);
+	if (err) {
+		error_at_line(EXIT_FAILURE, 0, __FILE__, (__LINE__ - 2),
+			"creating GpgME context failed: %s: %s\n",
+			gpgme_strsource (err), gpgme_strerror (err));
+	}
+	// GPGME_PK_ECDH
+	// GPGME_MD_SHA256
+	gpgme_set_armor(gm_ctx, 1);
+	gpgme_set_textmode(gm_ctx, 1);
+	// GPGME_DATA_ENCODING_ARMOR
+	// GPGME_DATA_TYPE_PGP_KEY
+
+	char *key = NULL;
+	if (key) {
+        gpgme_key_t akey;
+
+        err = gpgme_get_key(gm_ctx, key, &akey, 1);
+        if (err)
+    		error_at_line(EXIT_FAILURE, 0, __FILE__, (__LINE__ - 2),
+    			"failed to set key %s: %s: %s\n", key,
+    			gpgme_strsource (err), gpgme_strerror (err));
+
+        err = gpgme_signers_add(gm_ctx, akey);
+        if (gpg_err_code(err) != GPG_ERR_NO_ERROR)
+    		error_at_line(EXIT_FAILURE, 0, __FILE__, (__LINE__ - 2),
+    			"failed to call gpgme_signers_add(): %s: %s\n",
+    			gpgme_strsource (err), gpgme_strerror (err));
+
+        gpgme_key_unref(akey);
+    }
 
 	lopts.nodename = NULL;
 	lopts.servname = PORT;

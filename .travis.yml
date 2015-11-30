@@ -1,6 +1,8 @@
 addons:
   apt:
     packages:
+    - libgpgme11-dev
+    - libgnutls28-dev
     - libipc-run-perl
     - valgrind
 
