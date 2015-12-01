@@ -190,8 +190,11 @@ void OpenConnection(int listener, int *fdmax, fd_set *master_r,
 		free(TempNode);
 	} else {
 		int ret;
-
+#if GNUTLS_VERSION_NUMBER >= 0x030109
 		gnutls_transport_set_int(TempNode->session, TempNode->fd);
+#else
+#error need at least 3.1.9 gnutls: GNUTLS_VERSION_NUMBER
+#endif
 		ret = gnutls_handshake(TempNode->session);
 //		gnutls_record_get_direction(TempNode->session);
 		if (ret < 0) {
