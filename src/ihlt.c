@@ -24,6 +24,7 @@
 #include <signal.h>
 #include <string.h>
 #include <getopt.h>
+#include <libgen.h>
 #include <error.h>
 #include <syslog.h>
 
@@ -187,24 +188,41 @@ void main(int argc, char *argv[]) {
 	// GPGME_DATA_ENCODING_ARMOR
 	// GPGME_DATA_TYPE_PGP_KEY
 
-	char *key = NULL;
-	if (key) {
-        gpgme_key_t akey;
+	char *path_config;
+	sprintf(path_config,"%s/.%s", getenv("HOME"), basename(argv[0]));
+	char *path_key;
+	sprintf(path_key,"%s/key", path_config);
 
-        err = gpgme_get_key(gm_ctx, key, &akey, 1);
-        if (err)
-    		error_at_line(EXIT_FAILURE, 0, __FILE__, (__LINE__ - 2),
-    			"failed to set key %s: %s: %s\n", key,
-    			gpgme_strsource (err), gpgme_strerror (err));
+	FILE *fh = fopen(path_key, "rb");
+	if (fh != NULL ) {
+		char *key = NULL;
+		fseek(fh, 0L, SEEK_END);
+		long s = ftell(fh);
+		rewind(fh);
+		while (key == NULL )
+			key = malloc(s);
+		fread(key, s, 1, fh);
+		// we can now close the file
+		fclose(fh);
 
-        err = gpgme_signers_add(gm_ctx, akey);
-        if (gpg_err_code(err) != GPG_ERR_NO_ERROR)
-    		error_at_line(EXIT_FAILURE, 0, __FILE__, (__LINE__ - 2),
-    			"failed to call gpgme_signers_add(): %s: %s\n",
-    			gpgme_strsource (err), gpgme_strerror (err));
+		gpgme_key_t akey;
 
-        gpgme_key_unref(akey);
-    }
+		err = gpgme_get_key(gm_ctx, key, &akey, 1);
+		if (err)
+			error_at_line(EXIT_FAILURE, 0, __FILE__, (__LINE__ - 2),
+					"failed to set key %s: %s: %s\n", key, gpgme_strsource(err),
+					gpgme_strerror(err));
+
+		free(key);
+
+		err = gpgme_signers_add(gm_ctx, akey);
+		if (gpg_err_code(err) != GPG_ERR_NO_ERROR)
+			error_at_line(EXIT_FAILURE, 0, __FILE__, (__LINE__ - 2),
+					"failed to call gpgme_signers_add(): %s: %s\n",
+					gpgme_strsource(err), gpgme_strerror(err));
+
+		gpgme_key_unref(akey);
+	}
 
 	lopts.nodename = NULL;
 	lopts.servname = PORT;
