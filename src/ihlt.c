@@ -188,22 +188,32 @@ void main(int argc, char *argv[]) {
 	// GPGME_DATA_ENCODING_ARMOR
 	// GPGME_DATA_TYPE_PGP_KEY
 
-	char *path_config;
-	sprintf(path_config,"%s/.%s", getenv("HOME"), basename(argv[0]));
-	char *path_key;
+	char *path_home = getenv("HOME");
+	char *path_name = basename(argv[0]);
+	char *path_config = NULL;
+	size_t path_len = strlen(path_home) + strlen(path_name) + 3;
+	while (path_config == NULL )
+		path_config = malloc(path_len);
+	sprintf(path_config, "%s/.%s", path_home, path_name);
+	char *path_key = NULL; path_len += 4;
+	while (path_key == NULL )
+		path_key = malloc(path_len);
 	sprintf(path_key,"%s/key", path_config);
 
 	FILE *fh = fopen(path_key, "rb");
+	char *key = NULL;
 	if (fh != NULL ) {
-		char *key = NULL;
 		fseek(fh, 0L, SEEK_END);
-		long s = ftell(fh);
+		long s = ftell(fh) + 1;
 		rewind(fh);
 		while (key == NULL )
 			key = malloc(s);
-		fread(key, s, 1, fh);
+		key[s] = '\0';
+		fread(key, --s, 1, fh);
 		// we can now close the file
 		fclose(fh);
+
+		key = strtok(key, "\r\n");
 
 		gpgme_key_t akey;
 
@@ -222,7 +232,22 @@ void main(int argc, char *argv[]) {
 					gpgme_strsource(err), gpgme_strerror(err));
 
 		gpgme_key_unref(akey);
+	} else {
+		mkdir(path_config, 0777);
+		/*
+		fh = fopen(path_key, "wb");
+		if (fh == NULL )
+		perror("Error creating file");
+
+		key = "Hello";
+		fwrite(key, strlen(key), 1, fh);
+		fwrite("\n", 1, 1, fh);
+		close(fh);
+		*/
+
 	}
+	free(path_config);
+	free(path_key);
 
 	lopts.nodename = NULL;
 	lopts.servname = PORT;

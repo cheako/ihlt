@@ -6,6 +6,7 @@ clean:
 
 test: clean
 	CFLAGS=-g LDFLAGS=-g $(MAKE)
+	rm -rf ~/.ihlt
 	prove -f
 
 .PHONY: all clean test

@@ -5,6 +5,7 @@
 #define ConnectionsDoublyLinkedList_H_
 
 #include <netdb.h>
+#include <gnutls/gnutls.h>
 
 struct ConnectionNodeHandler;
 struct ConnectionNode {
@@ -18,6 +19,7 @@ struct ConnectionNode {
 	struct sockaddr_storage addr;
 	socklen_t addr_len;
 	char host[NI_MAXHOST];
+	gnutls_session_t session;
 	struct ConnectionNodeHandler {
 		void (*func)(struct ConnectionNode *, char *, size_t);
 		void (*free)(struct ConnectionNodeHandler *);

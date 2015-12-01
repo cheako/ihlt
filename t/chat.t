@@ -5,7 +5,7 @@ my $ihlt =
   start( [ 'valgrind', '--error-exitcode=63', 'src/ihlt', '-f' ], undef,
     '>&2' );
 
-use IO::Socket::INET;
+use IO::Socket::SSL;
 
 # create a connecting socket
 my @sockets;
@@ -15,7 +15,7 @@ for ( 1 .. 3 ) {
         diag "Connection $_ try $ctr: $!"
           if ( $ctr != 0 );
         sleep( ( $_ == 1 && $ctr == 0 ) * 20 + $ctr );
-        $sockets[$_] = new IO::Socket::INET(
+        $sockets[$_] = new IO::Socket::SSL(
             PeerHost => '127.0.0.1',
             PeerPort => '4458',
             Proto    => 'tcp',

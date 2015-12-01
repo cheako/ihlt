@@ -32,6 +32,8 @@
 
 #include "server.h"
 
+#include <gnutls/openpgp.h>
+
 // Send/receive raw data
 int sock_send(int fd, char *src, size_t size) {
 	int offset = 0;
@@ -39,6 +41,7 @@ int sock_send(int fd, char *src, size_t size) {
 	if (!src)
 		return -1;
 
+	// gnutls_record_send(session, buffer, ret);
 	while (offset != size) {
 		// write isn't guaranteed to send the entire string at once,
 		// so we have to sent it in a loop like this
@@ -69,7 +72,7 @@ struct ProccessInputHandler {
 };
 
 void ProccessInputFree(struct ConnectionNodeHandler *h) {
-	struct ProccessInputHandler *rm = (struct ProccessInputHandler *)h;
+	struct ProccessInputHandler *rm = (struct ProccessInputHandler *) h;
 	if (rm->buf != NULL )
 		free(rm->buf);
 	free(rm);
@@ -77,7 +80,8 @@ void ProccessInputFree(struct ConnectionNodeHandler *h) {
 
 void LineLocator(struct ConnectionNode *conn) {
 	/* look for the end of the line */
-	struct ProccessInputHandler *h = (struct ProccessInputHandler *)conn->handler;
+	struct ProccessInputHandler *h =
+			(struct ProccessInputHandler *) conn->handler;
 	char *str1, *saveptr1, *ntoken, *token;
 	bool endswell = false;
 	switch (h->buf[h->nbytes - 1]) {
@@ -136,7 +140,8 @@ void LineLocator(struct ConnectionNode *conn) {
 
 void ProccessInput(struct ConnectionNode *conn, char *buf, size_t nbytes) {
 	/* we got some data from a client */
-	struct ProccessInputHandler *h = (struct ProccessInputHandler *)conn->handler;
+	struct ProccessInputHandler *h =
+			(struct ProccessInputHandler *) conn->handler;
 	h->nbytes += nbytes;
 	printf("socket recv from %s on socket %d index %d\n", conn->host, conn->fd,
 			conn->index);
@@ -164,19 +169,42 @@ void ProccessInput(struct ConnectionNode *conn, char *buf, size_t nbytes) {
 	}
 }
 
-void OpenConnection(int listener, int *fdmax, fd_set *master) { /* we got a new one... */
+void OpenConnection(int listener, int *fdmax, fd_set *master_r,
+		fd_set *master_w) { /* we got a new one... */
 	/* handle new connections */
 	struct ConnectionNode *TempNode = GetNewConnection();
+
+	gnutls_init(&TempNode->session, GNUTLS_SERVER && GNUTLS_NONBLOCK);
+	gnutls_priority_set_direct(TempNode->session, "NORMAL:+CTYPE-OPENPGP",
+			NULL );
+	gnutls_certificate_server_set_request(TempNode->session,
+			GNUTLS_CERT_REQUEST);
+
 	TempNode->addr_len = sizeof(TempNode->addr);
-	if ((TempNode->fd = accept(listener,
-			(struct sockaddr *) &TempNode->addr, &TempNode->addr_len))
-			== -1) {
+	if ((TempNode->fd = accept(listener, (struct sockaddr *) &TempNode->addr,
+			&TempNode->addr_len)) == -1) {
 		perror("Warning accepting one new connection");
 		free(TempNode);
 	} else {
-		if (TempNode->fd > *fdmax) /* keep track of the maximum */
+		int ret;
+
+		gnutls_transport_set_int(TempNode->session, TempNode->fd);
+		ret = gnutls_handshake(TempNode->session);
+//		gnutls_record_get_direction(TempNode->session);
+		if (ret < 0) {
+			close(TempNode->fd);
+			gnutls_deinit(TempNode->session);
+			free(TempNode);
+			TempNode = NULL;
+			fprintf(stderr, "*** Handshake has failed (%s)\n\n",
+					gnutls_strerror(ret));
+		} else
+			printf("- Handshake was completed\n");
+
+		if (TempNode != NULL && TempNode->fd > *fdmax) /* keep track of the maximum */
 			if (TempNode->fd > FD_SETSIZE) {
 				close(TempNode->fd);
+				gnutls_deinit(TempNode->session);
 				free(TempNode);
 				TempNode = NULL;
 			} else
@@ -184,35 +212,36 @@ void OpenConnection(int listener, int *fdmax, fd_set *master) { /* we got a new 
 
 		if (TempNode != NULL ) {
 			TempNode->getnameinfo = getnameinfo(
-					(struct sockaddr *) &TempNode->addr,
-					TempNode->addr_len, TempNode->host, NI_MAXHOST,
-					NULL, 0, 0);
+					(struct sockaddr *) &TempNode->addr, TempNode->addr_len,
+					TempNode->host, NI_MAXHOST, NULL, 0, 0);
 
 			struct ProccessInputHandler *handler = NULL;
-			while(handler == NULL)
+			while (handler == NULL )
 				handler = malloc(sizeof(struct ProccessInputHandler));
 			bzero(handler, sizeof(struct ProccessInputHandler));
 
 			handler->func = &ProccessInput;
 			handler->free = &ProccessInputFree;
 
-			TempNode->handler = (struct ConnectionNodeHandler *)handler;
+			TempNode->handler = (struct ConnectionNodeHandler *) handler;
 
 			InsertConnectionBefore(&connections_head, TempNode);
 			printf("New connection from %s on socket %d index %d\n",
 					TempNode->host, TempNode->fd, TempNode->index);
 
 			/* add to master set */
-			FD_SET(TempNode->fd, master);
+			FD_SET(TempNode->fd, master_r);
 		}
 	}
 }
 
 void EnterListener(struct ListenerOptions *opts) {
-	/* master file descriptor list */
-	fd_set master;
-	/* temp file descriptor list for select() */
-	fd_set read_fds;
+	/* master read file descriptor list */
+	fd_set master_r;
+	/* master write file descriptor list */
+	fd_set master_w;
+	/* temp file descriptor lists for select() */
+	fd_set read_fds, write_fds;
 	/* maximum file descriptor number */
 	int fdmax;
 	/* listening socket descriptor */
@@ -223,8 +252,10 @@ void EnterListener(struct ListenerOptions *opts) {
 	struct addrinfo *result, *rp;
 
 	/* clear the master and temp sets */
-	FD_ZERO(&master);
+	FD_ZERO(&master_r);
+	FD_ZERO(&master_w);
 	FD_ZERO(&read_fds);
+	FD_ZERO(&write_fds);
 
 	memset(&opts->hints, 0, sizeof(struct addrinfo));
 	opts->hints.ai_family = AF_UNSPEC; /* Allow IPv4 or IPv6 */
@@ -277,22 +308,22 @@ void EnterListener(struct ListenerOptions *opts) {
 	}
 
 	/* add the listener to the master set */
-	FD_SET(listener, &master);
+	FD_SET(listener, &master_r);
 	/* keep track of the biggest file descriptor */
 	fdmax = listener; /* so far, it's this one */
 
 	/* loop */
 	for (;;) {
-		/* copy it */
-		read_fds = master;
+		read_fds = master_r;
+		write_fds = master_w;
 
-		if (select(fdmax + 1, &read_fds, NULL, NULL, NULL ) == -1) {
+		if (select(fdmax + 1, &read_fds, &write_fds, NULL, NULL ) == -1) {
 			perror("Error waiting for input");
 			exit(EXIT_FAILURE);
 		}
 
 		if (FD_ISSET(listener, &read_fds))
-			OpenConnection(listener, &fdmax, &master);
+			OpenConnection(listener, &fdmax, &master_r, &master_w);
 
 		/* run through the existing connections looking for data to be read */
 		struct ConnectionNode *i = connections_head;
@@ -305,24 +336,41 @@ void EnterListener(struct ListenerOptions *opts) {
 					/* buffer for client data */
 					char buf[1024];
 					int nbytes;
-					if ((nbytes = recv(i->fd, buf, sizeof(buf) - 1, 0)) <= 0) {
-						/* got error or connection closed by client */
-						if (nbytes == 0)
-							/* connection closed */
-							printf(
-									"socket to %s hung up on socket %d index %d\n",
-									i->host, i->fd, i->index);
-						else
-							perror("Negative recv");
+					nbytes = gnutls_record_recv(i->session, buf, 1023);
+
+					if (nbytes == 0) {
+						/* connection closed */
+						printf("socket to %s hung up on socket %d index %d\n",
+								i->host, i->fd, i->index);
 						/* close it... */
 						close(i->fd);
-						/* remove from master set */
-						FD_CLR(i->fd, &master);
+						gnutls_deinit(i->session);
+						/* remove from master sets */
+						FD_CLR(i->fd, &master_r);
+						FD_CLR(i->fd, &master_w);
 						/* step back and remove this connection */
 						i = RemoveConnection(i);
 						if (i == NULL )
 							break;
-					} else {
+					} else if (nbytes < 0
+							&& gnutls_error_is_fatal(nbytes) == 0) {
+						fprintf(stderr, "*** Warning: %s\n",
+								gnutls_strerror(nbytes));
+					} else if (nbytes < 0) {
+						printf(
+								"socket to %s received corrupted data(%d) on socket %d index %d, closing the connection.\n",
+								i->host, nbytes, i->fd, i->index);
+						/* close it... */
+						close(i->fd);
+						gnutls_deinit(i->session);
+						/* remove from master sets */
+						FD_CLR(i->fd, &master_r);
+						FD_CLR(i->fd, &master_w);
+						/* step back and remove this connection */
+						i = RemoveConnection(i);
+						if (i == NULL )
+							break;
+					} else if (nbytes > 0) {
 						/* Ensure this is an ansi string */
 						buf[nbytes] = '\0';
 						i->handler->func(i, buf, nbytes);
