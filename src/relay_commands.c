@@ -57,7 +57,7 @@ int echo_func(struct ConnectionNode *conn, int argc, char **argv) {
 		strncat(t, argv[i], n);
 	}
 	strncat(t, "\r\n", n);
-	sock_send(conn->fd, t, strlen(t));
+	sock_send(conn, t, strlen(t));
 	free(t);
 	return 0;
 }
@@ -84,7 +84,7 @@ int wall_func(struct ConnectionNode *conn, int argc, char **argv) {
 		char *r = NULL;
 		printf("socket send to %s on socket %d index %d\n", dest->host,
 				dest->fd, dest->index);
-		sock_send(dest->fd, t, strlen(t));
+		sock_send(dest, t, strlen(t));
 	}
 	free(t);
 	return 0;
@@ -109,7 +109,7 @@ int prev_func(struct ConnectionNode *conn, int argc, char **argv) {
 		strncat(t, argv[i], n);
 	}
 	strncat(t, "\r\n", n);
-	sock_send(conn->prev->fd, t, strlen(t));
+	sock_send(conn->prev, t, strlen(t));
 	free(t);
 	return 0;
 }
@@ -133,7 +133,7 @@ int next_func(struct ConnectionNode *conn, int argc, char **argv) {
 		strncat(t, argv[i], n);
 	}
 	strncat(t, "\r\n", n);
-	sock_send(conn->next->fd, t, strlen(t));
+	sock_send(conn->next, t, strlen(t));
 	free(t);
 	return 0;
 }

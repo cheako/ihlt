@@ -18,6 +18,7 @@
 /* Example from:
  *   http://www.tenouk.com/Module41.html
  *   http://linux.die.net/man/3/getaddrinfo
+ *   http://www.gnutls.org/manual/html_node/Echo-server-with-OpenPGP-authentication.html
  */
 
 #include <sys/types.h>
@@ -34,33 +35,74 @@
 
 #include <gnutls/openpgp.h>
 
-// Send/receive raw data
-int sock_send(int fd, char *src, size_t size) {
-	int offset = 0;
+/* master read file descriptor list */
+static fd_set master_r;
+/* master write file descriptor list */
+static fd_set master_w;
 
+void _gnutls_record_get_direction(struct ConnectionNode *i) {
+	if(gnutls_record_get_direction(i->session) == 1)
+		FD_SET(i->fd, &master_w);
+	else
+		FD_CLR(i->fd, &master_w);
+}
+
+int _gnutls_handshake(struct ConnectionNode *i) {
+	int ret = gnutls_handshake(i->session);
+	if (ret == GNUTLS_E_INTERRUPTED || ret == GNUTLS_E_AGAIN)
+		_gnutls_record_get_direction(i);
+	else if (ret < 0) {
+		/* close it... */
+		close(i->fd);
+		gnutls_deinit(i->session);
+		/* remove from master sets */
+		FD_CLR(i->fd, &master_r);
+		FD_CLR(i->fd, &master_w);
+		/* step back and remove this connection */
+		fprintf(stderr, "*** Handshake has failed: %s\n",
+				gnutls_strerror(ret));
+		RemoveConnection(i);
+	} else
+		printf("- Handshake was completed\n");
+
+	return ret;
+}
+
+ssize_t _gnutls_record_recv(struct ConnectionNode *i, void *data,
+		size_t data_size) {
+	ssize_t ret = gnutls_record_recv(i->session, data, data_size);
+	if (ret == GNUTLS_E_INTERRUPTED || ret == GNUTLS_E_AGAIN)
+		_gnutls_record_get_direction(i);
+	return ret;
+}
+
+ssize_t _gnutls_record_send(struct ConnectionNode *i, const void *data,
+		size_t data_size) {
+	ssize_t ret = gnutls_record_send(i->session, data, data_size);
+	if (ret == GNUTLS_E_INTERRUPTED || ret == GNUTLS_E_AGAIN)
+		_gnutls_record_get_direction(i);
+	return ret;
+}
+
+int gnutls_ready(struct ConnectionNode *i) {
+	switch (i->gnutls_state) {
+	case _GNUTLS_READY:
+		return 0;
+	case _GNUTLS_HANDSHAKE:
+		return _gnutls_handshake(i);
+	case _GNUTLS_RECV:
+		return _gnutls_record_recv(i, NULL, 0);
+	case _GNUTLS_SEND:
+		return _gnutls_record_send(i, NULL, 0);
+	}
+}
+
+// Send/receive raw data
+int sock_send(struct ConnectionNode *i, char *src, size_t size) {
 	if (!src)
 		return -1;
 
-	// gnutls_record_send(session, buffer, ret);
-	while (offset != size) {
-		// write isn't guaranteed to send the entire string at once,
-		// so we have to sent it in a loop like this
-		int sent = send(fd, ((char *) src) + offset, size - offset, 0);
-		if (sent == -1) {
-			if (errno != EAGAIN)
-				//shutdown(fd, SHUT_RDWR);
-				return sent;
-			continue;
-		} else if (sent == 0) {
-			// when this returns zero, it generally means
-			// we got disconnected
-			return sent + offset;
-		}
-
-		offset += sent;
-	}
-
-	return offset;
+	return _gnutls_record_send(i, src, size);
 }
 
 struct ProccessInputHandler {
@@ -169,8 +211,7 @@ void ProccessInput(struct ConnectionNode *conn, char *buf, size_t nbytes) {
 	}
 }
 
-void OpenConnection(int listener, int *fdmax, fd_set *master_r,
-		fd_set *master_w) { /* we got a new one... */
+void OpenConnection(int listener, int *fdmax) { /* we got a new one... */
 	/* handle new connections */
 	struct ConnectionNode *TempNode = GetNewConnection();
 #ifdef GNUTLS_NONBLOCK
@@ -189,24 +230,6 @@ void OpenConnection(int listener, int *fdmax, fd_set *master_r,
 		perror("Warning accepting one new connection");
 		free(TempNode);
 	} else {
-		int ret;
-#if GNUTLS_VERSION_NUMBER >= 0x030109
-		gnutls_transport_set_int(TempNode->session, TempNode->fd);
-#else
-#error need at least 3.1.9 gnutls: GNUTLS_VERSION_NUMBER
-#endif
-		ret = gnutls_handshake(TempNode->session);
-//		gnutls_record_get_direction(TempNode->session);
-		if (ret < 0) {
-			close(TempNode->fd);
-			gnutls_deinit(TempNode->session);
-			free(TempNode);
-			TempNode = NULL;
-			fprintf(stderr, "*** Handshake has failed (%s)\n\n",
-					gnutls_strerror(ret));
-		} else
-			printf("- Handshake was completed\n");
-
 		if (TempNode != NULL && TempNode->fd > *fdmax) /* keep track of the maximum */
 			if (TempNode->fd > FD_SETSIZE) {
 				close(TempNode->fd);
@@ -236,16 +259,19 @@ void OpenConnection(int listener, int *fdmax, fd_set *master_r,
 					TempNode->host, TempNode->fd, TempNode->index);
 
 			/* add to master set */
-			FD_SET(TempNode->fd, master_r);
+			FD_SET(TempNode->fd, &master_r);
 		}
+
+#if GNUTLS_VERSION_NUMBER >= 0x030109
+		gnutls_transport_set_int(TempNode->session, TempNode->fd);
+#else
+#error need at least 3.1.9 gnutls: GNUTLS_VERSION_NUMBER
+#endif
+		_gnutls_handshake(TempNode);
 	}
 }
 
 void EnterListener(struct ListenerOptions *opts) {
-	/* master read file descriptor list */
-	fd_set master_r;
-	/* master write file descriptor list */
-	fd_set master_w;
 	/* temp file descriptor lists for select() */
 	fd_set read_fds, write_fds;
 	/* maximum file descriptor number */
@@ -329,7 +355,7 @@ void EnterListener(struct ListenerOptions *opts) {
 		}
 
 		if (FD_ISSET(listener, &read_fds))
-			OpenConnection(listener, &fdmax, &master_r, &master_w);
+			OpenConnection(listener, &fdmax);
 
 		/* run through the existing connections looking for data to be read */
 		struct ConnectionNode *i = connections_head;

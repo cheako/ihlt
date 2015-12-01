@@ -7,6 +7,12 @@
 #include <netdb.h>
 #include <gnutls/gnutls.h>
 
+enum gnutls_state {
+	_GNUTLS_READY,
+	_GNUTLS_HANDSHAKE,
+	_GNUTLS_RECV,
+	_GNUTLS_SEND,
+};
 struct ConnectionNodeHandler;
 struct ConnectionNode {
 	struct ConnectionNode * prev;
@@ -20,6 +26,7 @@ struct ConnectionNode {
 	socklen_t addr_len;
 	char host[NI_MAXHOST];
 	gnutls_session_t session;
+	enum gnutls_state gnutls_state;
 	struct ConnectionNodeHandler {
 		void (*func)(struct ConnectionNode *, char *, size_t);
 		void (*free)(struct ConnectionNodeHandler *);

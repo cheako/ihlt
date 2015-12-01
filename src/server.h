@@ -25,7 +25,7 @@
 #include <sys/types.h>
 #include "protocol.h"
 
-extern int sock_send(int, char *, size_t);
+extern int sock_send(struct ConnectionNode *, char *, size_t);
 
 struct ListenerOptions {
 	char *nodename;
