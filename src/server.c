@@ -173,8 +173,11 @@ void OpenConnection(int listener, int *fdmax, fd_set *master_r,
 		fd_set *master_w) { /* we got a new one... */
 	/* handle new connections */
 	struct ConnectionNode *TempNode = GetNewConnection();
-
+#ifdef GNUTLS_NONBLOCK
 	gnutls_init(&TempNode->session, GNUTLS_SERVER && GNUTLS_NONBLOCK);
+#else
+	gnutls_init(&TempNode->session, GNUTLS_SERVER);
+#endif
 	gnutls_priority_set_direct(TempNode->session, "NORMAL:+CTYPE-OPENPGP",
 			NULL );
 	gnutls_certificate_server_set_request(TempNode->session,
