@@ -174,7 +174,7 @@ void OpenConnection(int listener, int *fdmax, fd_set *master_r,
 	/* handle new connections */
 	struct ConnectionNode *TempNode = GetNewConnection();
 #ifdef GNUTLS_NONBLOCK
-	gnutls_init(&TempNode->session, GNUTLS_SERVER && GNUTLS_NONBLOCK);
+	gnutls_init(&TempNode->session, GNUTLS_SERVER || GNUTLS_NONBLOCK);
 #else
 	gnutls_init(&TempNode->session, GNUTLS_SERVER);
 #endif
