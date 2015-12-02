@@ -172,85 +172,13 @@ void main(int argc, char *argv[]) {
 	char *pidfile = "/tmp/ihlt.pid";
 	int log_level = LOG_DEBUG, log_opts = LOG_PID;
 
-	gpgme_check_version(NULL);
-
-	gpgme_ctx_t gm_ctx;
-	gpgme_error_t err = gpgme_new (&gm_ctx);
-	if (err) {
-		error_at_line(EXIT_FAILURE, 0, __FILE__, (__LINE__ - 2),
-			"creating GpgME context failed: %s: %s\n",
-			gpgme_strsource (err), gpgme_strerror (err));
-	}
-	// GPGME_PK_ECDH
-	// GPGME_MD_SHA256
-	gpgme_set_armor(gm_ctx, 1);
-	gpgme_set_textmode(gm_ctx, 1);
-	// GPGME_DATA_ENCODING_ARMOR
-	// GPGME_DATA_TYPE_PGP_KEY
-
-	char *path_home = getenv("HOME");
-	char *path_name = basename(argv[0]);
-	char *path_config = NULL;
-	size_t path_len = strlen(path_home) + strlen(path_name) + 3;
-	while (path_config == NULL )
-		path_config = malloc(path_len);
-	sprintf(path_config, "%s/.%s", path_home, path_name);
-	char *path_key = NULL; path_len += 4;
-	while (path_key == NULL )
-		path_key = malloc(path_len);
-	sprintf(path_key,"%s/key", path_config);
-
-	FILE *fh = fopen(path_key, "rb");
-	char *key = NULL;
-	if (fh != NULL ) {
-		fseek(fh, 0L, SEEK_END);
-		long s = ftell(fh) + 1;
-		rewind(fh);
-		while (key == NULL )
-			key = malloc(s);
-		key[s] = '\0';
-		fread(key, --s, 1, fh);
-		// we can now close the file
-		fclose(fh);
-
-		key = strtok(key, "\r\n");
-
-		gpgme_key_t akey;
-
-		err = gpgme_get_key(gm_ctx, key, &akey, 1);
-		if (err)
-			error_at_line(EXIT_FAILURE, 0, __FILE__, (__LINE__ - 2),
-					"failed to set key %s: %s: %s\n", key, gpgme_strsource(err),
-					gpgme_strerror(err));
-
-		free(key);
-
-		err = gpgme_signers_add(gm_ctx, akey);
-		if (gpg_err_code(err) != GPG_ERR_NO_ERROR)
-			error_at_line(EXIT_FAILURE, 0, __FILE__, (__LINE__ - 2),
-					"failed to call gpgme_signers_add(): %s: %s\n",
-					gpgme_strsource(err), gpgme_strerror(err));
-
-		gpgme_key_unref(akey);
-	} else {
-		mkdir(path_config, 0777);
-		/*
-		fh = fopen(path_key, "wb");
-		if (fh == NULL )
-		perror("Error creating file");
-
-		key = "Hello";
-		fwrite(key, strlen(key), 1, fh);
-		fwrite("\n", 1, 1, fh);
-		close(fh);
-		*/
-
-	}
-	free(path_config);
-	free(path_key);
-
 	lopts.nodename = NULL;
 	lopts.servname = PORT;
+	lopts.path_home = getenv("HOME");
+	lopts.path_name = basename(argv[0]);
+	lopts.path_config = NULL;
+	lopts.certfile = NULL;
+	lopts.keyfile = NULL;
 	memset(&lopts.hints, 0, sizeof(struct addrinfo));
 	lopts.hints.ai_family = AF_UNSPEC; /* Allow IPv4 or IPv6 */
 	lopts.hints.ai_socktype = SOCK_STREAM; /* Datagram socket */
@@ -324,6 +252,116 @@ void main(int argc, char *argv[]) {
 			abort();
 		}
 	}
+
+	gpgme_check_version(NULL );
+
+	gpgme_ctx_t gm_ctx;
+	gpgme_error_t err = gpgme_new(&gm_ctx);
+	if (err) {
+		error_at_line(EXIT_FAILURE, 0, __FILE__, (__LINE__ - 2),
+				"creating GpgME context failed: %s: %s\n", gpgme_strsource(err),
+				gpgme_strerror(err));
+	}
+	// GPGME_PK_ECDH
+	// GPGME_MD_SHA256
+	gpgme_set_armor(gm_ctx, 1);
+	gpgme_set_textmode(gm_ctx, 1);
+	// GPGME_DATA_ENCODING_ARMOR
+	// GPGME_DATA_TYPE_PGP_KEY
+
+	size_t path_len = strlen(lopts.path_home) + strlen(lopts.path_name) + 3;
+	while (lopts.path_config == NULL )
+		lopts.path_config = malloc(path_len);
+	sprintf(lopts.path_config, "%s/.%s", lopts.path_home, lopts.path_name);
+	char *path_key = NULL;
+	path_len += 4;
+	while (path_key == NULL )
+		path_key = malloc(path_len);
+	sprintf(path_key, "%s/key", lopts.path_config);
+
+	path_len += 9;
+	while (lopts.certfile == NULL )
+		lopts.certfile = malloc(path_len);
+	sprintf(lopts.certfile, "%s/certfile.txt", lopts.path_config);
+	path_len -= 1;
+	while (lopts.keyfile == NULL )
+		lopts.keyfile = malloc(path_len);
+	sprintf(lopts.keyfile, "%s/keyfile.txt", lopts.path_config);
+
+	FILE *fh = fopen(path_key, "rb");
+	char *key = NULL;
+	if (fh != NULL ) {
+		fseek(fh, 0L, SEEK_END);
+		long s = ftell(fh) + 1;
+		rewind(fh);
+		while (key == NULL )
+			key = malloc(s);
+		key[s] = '\0';
+		fread(key, --s, 1, fh);
+		// we can now close the file
+		fclose(fh);
+
+		key = strtok(key, "\r\n");
+
+		gpgme_key_t akey;
+
+		err = gpgme_get_key(gm_ctx, key, &akey, 1);
+		if (err)
+			error_at_line(EXIT_FAILURE, 0, __FILE__, (__LINE__ - 2),
+					"failed to set key %s: %s: %s\n", key, gpgme_strsource(err),
+					gpgme_strerror(err));
+
+		free(key);
+
+		err = gpgme_signers_add(gm_ctx, akey);
+		if (gpg_err_code(err) != GPG_ERR_NO_ERROR)
+			error_at_line(EXIT_FAILURE, 0, __FILE__, (__LINE__ - 2),
+					"failed to call gpgme_signers_add(): %s: %s\n",
+					gpgme_strsource(err), gpgme_strerror(err));
+
+		gpgme_key_unref(akey);
+	} else {
+		mkdir(lopts.path_config, 0777);
+
+		/*
+		 * The next step is to create OpenPGP credentials for the server.
+
+		 gpg --gen-key
+		 ...enter whatever details you want, use 'test.gnutls.org' as name...
+
+		 * Make a note of the OpenPGP key identifier of the newly generated key, here it was 5D1D14D8. You will need to export the key for GnuTLS to be able to use it.
+
+		 gpg -a --export 5D1D14D8 > openpgp-server.txt
+		 gpg --export 5D1D14D8 > openpgp-server.bin
+		 gpg --export-secret-keys 5D1D14D8 > openpgp-server-key.bin
+		 gpg -a --export-secret-keys 5D1D14D8 > openpgp-server-key.txt
+
+		 *
+		 */
+
+		/*
+		 fh = fopen(path_key, "wb");
+		 if (fh == NULL )
+		 perror("Error creating file");
+
+		 key = "Hello";
+		 fwrite(key, strlen(key), 1, fh);
+		 fwrite("\n", 1, 1, fh);
+		 close(fh);
+		 */
+
+	}
+
+	unsigned int bits = gnutls_sec_param_to_pk_bits(GNUTLS_PK_DH,
+			GNUTLS_SEC_PARAM_LEGACY);
+
+	/* Generate Diffie-Hellman parameters - for use with DHE
+	 * kx algorithms. These should be discarded and regenerated
+	 * once a day, once a week or once a month. Depending on the
+	 * security requirements.
+	 */
+	gnutls_dh_params_init(&lopts.dh_params);
+	gnutls_dh_params_generate2(lopts.dh_params, bits);
 
 	/* Logging */
 	setlogmask(LOG_UPTO(log_level));

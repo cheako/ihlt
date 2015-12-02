@@ -328,10 +328,24 @@ void EnterListener(struct ListenerOptions *opts) {
 	int fdmax;
 	/* listening socket descriptor */
 	int listener;
+	gnutls_certificate_credentials_t cred;
 	/* for setsockopt() SO_REUSEADDR, below */
 	int yes = 1;
 	int j;
 	struct addrinfo *result, *rp;
+
+	/* for backwards compatibility with gnutls < 3.3.0 */
+	gnutls_global_init();
+
+	gnutls_certificate_allocate_credentials(&cred);
+
+	/*        gnutls_certificate_set_openpgp_keyring_file(cred, RINGFILE,
+	 GNUTLS_OPENPGP_FMT_BASE64); */
+
+	gnutls_certificate_set_openpgp_key_file(cred, opts->certfile, opts->keyfile,
+			GNUTLS_OPENPGP_FMT_BASE64);
+
+	gnutls_certificate_set_dh_params(cred, opts->dh_params);
 
 	/* clear the master and temp sets */
 	FD_ZERO(&master_r);

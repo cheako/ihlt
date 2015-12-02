@@ -30,6 +30,12 @@ extern int sock_send(struct ConnectionNode *, char *, size_t);
 struct ListenerOptions {
 	char *nodename;
 	char *servname;
+	char *path_home;
+	char *path_name;
+	char *path_config;
+	char *certfile;
+	char *keyfile;
+	gnutls_dh_params_t dh_params;
 	/* server address */
 	struct addrinfo hints;
 };
