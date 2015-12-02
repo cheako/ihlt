@@ -36,22 +36,23 @@
 #include <gnutls/openpgp.h>
 
 /* master read file descriptor list */
-static fd_set master_r;
+fd_set master_r;
 /* master write file descriptor list */
-static fd_set master_w;
+fd_set master_w;
 
 void _gnutls_record_get_direction(struct ConnectionNode *i) {
-	if(gnutls_record_get_direction(i->session) == 1)
+	if (gnutls_record_get_direction(i->session) == 1)
 		FD_SET(i->fd, &master_w);
 	else
 		FD_CLR(i->fd, &master_w);
 }
 
-int _gnutls_handshake(struct ConnectionNode *i) {
+void _gnutls_handshake(struct ConnectionNode *i) {
 	int ret = gnutls_handshake(i->session);
-	if (ret == GNUTLS_E_INTERRUPTED || ret == GNUTLS_E_AGAIN)
+	if (ret == GNUTLS_E_INTERRUPTED || ret == GNUTLS_E_AGAIN) {
+		i->gnutls_state = _GNUTLS_HANDSHAKE;
 		_gnutls_record_get_direction(i);
-	else if (ret < 0) {
+	} else if (ret < 0) {
 		/* close it... */
 		close(i->fd);
 		gnutls_deinit(i->session);
@@ -59,41 +60,89 @@ int _gnutls_handshake(struct ConnectionNode *i) {
 		FD_CLR(i->fd, &master_r);
 		FD_CLR(i->fd, &master_w);
 		/* step back and remove this connection */
-		fprintf(stderr, "*** Handshake has failed: %s\n",
-				gnutls_strerror(ret));
+		printf(
+				"socket to %s handshake failed \"%s\" on socket %d index %d, closing the connection.\n",
+				i->host, gnutls_strerror(ret), i->fd, i->index);
 		RemoveConnection(i);
-	} else
-		printf("- Handshake was completed\n");
-
-	return ret;
+	} else {
+		i->gnutls_state = _GNUTLS_READY;
+		FD_CLR(i->fd, &master_w);
+		printf(
+				"socket to %s handshake completed on socket %d index %d, closing the connection.\n",
+				i->host, i->fd, i->index);
+	}
+	return;
 }
 
-ssize_t _gnutls_record_recv(struct ConnectionNode *i, void *data,
-		size_t data_size) {
-	ssize_t ret = gnutls_record_recv(i->session, data, data_size);
-	if (ret == GNUTLS_E_INTERRUPTED || ret == GNUTLS_E_AGAIN)
-		_gnutls_record_get_direction(i);
-	return ret;
+void _gnutls_record_recv(struct ConnectionNode **i) {
+	char buf[1024];
+	ssize_t ret = gnutls_record_recv((*i)->session, buf, 1023);
+	if (ret == GNUTLS_E_INTERRUPTED || ret == GNUTLS_E_AGAIN) {
+		(*i)->gnutls_state = _GNUTLS_RECV;
+		_gnutls_record_get_direction(*i);
+		return;
+	} else {
+		(*i)->gnutls_state = _GNUTLS_READY;
+		FD_CLR((*i)->fd, &master_w);
+	}
+
+	if (ret == 0) {
+		/* connection closed */
+		printf("socket to %s hung up on socket %d index %d\n", (*i)->host,
+				(*i)->fd, (*i)->index);
+		goto close;
+	} else if (ret < 0 && gnutls_error_is_fatal(ret) == 0) {
+		fprintf(stderr, "*** Warning: %s\n", gnutls_strerror(ret));
+	} else if (ret < 0) {
+		printf(
+				"socket to %s received corrupted data(%d) on socket %d index %d, closing the connection.\n",
+				(*i)->host, ret, (*i)->fd, (*i)->index);
+		goto close;
+	} else if (ret > 0) {
+		/* Ensure this is an ansi string */
+		buf[ret] = '\0';
+		(*i)->handler->func(*i, buf, ret);
+	}
+	return;
+
+	close:
+	/* close it... */
+	close((*i)->fd);
+	gnutls_deinit((*i)->session);
+	/* remove from master sets */
+	FD_CLR((*i)->fd, &master_r);
+	FD_CLR((*i)->fd, &master_w);
+	/* step back and remove this connection */
+	*i = RemoveConnection(*i);
+	return;
 }
 
-ssize_t _gnutls_record_send(struct ConnectionNode *i, const void *data,
+void _gnutls_record_send(struct ConnectionNode *i, const void *data,
 		size_t data_size) {
 	ssize_t ret = gnutls_record_send(i->session, data, data_size);
-	if (ret == GNUTLS_E_INTERRUPTED || ret == GNUTLS_E_AGAIN)
+	if (ret == GNUTLS_E_INTERRUPTED || ret == GNUTLS_E_AGAIN) {
+		i->gnutls_state = _GNUTLS_SEND;
 		_gnutls_record_get_direction(i);
-	return ret;
+	} else {
+		i->gnutls_state = _GNUTLS_READY;
+		FD_CLR(i->fd, &master_w);
+	}
+	return;
 }
 
-int gnutls_ready(struct ConnectionNode *i) {
-	switch (i->gnutls_state) {
+void gnutls_ready(struct ConnectionNode **i) {
+	switch ((*i)->gnutls_state) {
 	case _GNUTLS_READY:
-		return 0;
+		return;
 	case _GNUTLS_HANDSHAKE:
-		return _gnutls_handshake(i);
+		_gnutls_handshake(*i);
+		return;
 	case _GNUTLS_RECV:
-		return _gnutls_record_recv(i, NULL, 0);
+		_gnutls_record_recv(i);
+		return;
 	case _GNUTLS_SEND:
-		return _gnutls_record_send(i, NULL, 0);
+		_gnutls_record_send(*i, NULL, 0);
+		return;
 	}
 }
 
@@ -102,7 +151,8 @@ int sock_send(struct ConnectionNode *i, char *src, size_t size) {
 	if (!src)
 		return -1;
 
-	return _gnutls_record_send(i, src, size);
+	_gnutls_record_send(i, src, size);
+	return size;
 }
 
 struct ProccessInputHandler {
@@ -157,7 +207,7 @@ void LineLocator(struct ConnectionNode *conn) {
 				CommandFunc f;
 				f = get_command_function(argv[0]);
 				if (!f) {
-					write(conn->fd,
+					_gnutls_record_send(conn,
 							"502 Bad command or it is not implemented here.\r\n",
 							48);
 				} else
@@ -265,7 +315,7 @@ void OpenConnection(int listener, int *fdmax) { /* we got a new one... */
 #if GNUTLS_VERSION_NUMBER >= 0x030109
 		gnutls_transport_set_int(TempNode->session, TempNode->fd);
 #else
-#error need at least 3.1.9 gnutls: GNUTLS_VERSION_NUMBER
+#error need at least 3.1.9 gnutls.
 #endif
 		_gnutls_handshake(TempNode);
 	}
@@ -361,53 +411,18 @@ void EnterListener(struct ListenerOptions *opts) {
 		struct ConnectionNode *i = connections_head;
 		if (connections_head != NULL )
 			do {
-				if (FD_ISSET(i->fd, &read_fds)) { /* we got one... */
+				if (FD_ISSET(i->fd, &write_fds)) { /* we can tell gnutls to write... */
+					gnutls_ready(&i);
+				}
+				if (FD_ISSET(i->fd, &read_fds) && !FD_ISSET(i->fd, &master_w)) { /* we got one... */
 					/* handle data from a client */
 					printf("New data from %s on socket %d index %d\n", i->host,
 							i->fd, i->index);
 					/* buffer for client data */
-					char buf[1024];
-					int nbytes;
-					nbytes = gnutls_record_recv(i->session, buf, 1023);
-
-					if (nbytes == 0) {
-						/* connection closed */
-						printf("socket to %s hung up on socket %d index %d\n",
-								i->host, i->fd, i->index);
-						/* close it... */
-						close(i->fd);
-						gnutls_deinit(i->session);
-						/* remove from master sets */
-						FD_CLR(i->fd, &master_r);
-						FD_CLR(i->fd, &master_w);
-						/* step back and remove this connection */
-						i = RemoveConnection(i);
-						if (i == NULL )
-							break;
-					} else if (nbytes < 0
-							&& gnutls_error_is_fatal(nbytes) == 0) {
-						fprintf(stderr, "*** Warning: %s\n",
-								gnutls_strerror(nbytes));
-					} else if (nbytes < 0) {
-						printf(
-								"socket to %s received corrupted data(%d) on socket %d index %d, closing the connection.\n",
-								i->host, nbytes, i->fd, i->index);
-						/* close it... */
-						close(i->fd);
-						gnutls_deinit(i->session);
-						/* remove from master sets */
-						FD_CLR(i->fd, &master_r);
-						FD_CLR(i->fd, &master_w);
-						/* step back and remove this connection */
-						i = RemoveConnection(i);
-						if (i == NULL )
-							break;
-					} else if (nbytes > 0) {
-						/* Ensure this is an ansi string */
-						buf[nbytes] = '\0';
-						i->handler->func(i, buf, nbytes);
-					}
+					_gnutls_record_recv(&i);
 				}
+				if (i == NULL )
+					break;
 				i = i->next;
 			} while (i != connections_head);
 	}
