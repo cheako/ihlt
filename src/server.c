@@ -261,6 +261,7 @@ void ProccessInput(struct ConnectionNode *conn, char *buf, size_t nbytes) {
 	}
 }
 
+gnutls_certificate_credentials_t cred;
 void OpenConnection(int listener, int *fdmax) { /* we got a new one... */
 	/* handle new connections */
 	struct ConnectionNode *TempNode = GetNewConnection();
@@ -269,6 +270,9 @@ void OpenConnection(int listener, int *fdmax) { /* we got a new one... */
 #else
 	gnutls_init(&TempNode->session, GNUTLS_SERVER);
 #endif
+
+	gnutls_credentials_set (TempNode->session, GNUTLS_CRD_CERTIFICATE, &cred);
+
 	gnutls_priority_set_direct(TempNode->session, "NORMAL:+CTYPE-OPENPGP",
 			NULL );
 	gnutls_certificate_server_set_request(TempNode->session,
@@ -328,7 +332,6 @@ void EnterListener(struct ListenerOptions *opts) {
 	int fdmax;
 	/* listening socket descriptor */
 	int listener;
-	gnutls_certificate_credentials_t cred;
 	/* for setsockopt() SO_REUSEADDR, below */
 	int yes = 1;
 	int j;
