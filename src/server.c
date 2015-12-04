@@ -76,7 +76,7 @@ void _gnutls_handshake(struct ConnectionNode *i) {
 
 void _gnutls_record_recv(struct ConnectionNode **i) {
 	char buf[1024];
-	ssize_t ret = gnutls_record_recv((*i)->session, buf, 1023);
+	int ret = gnutls_record_recv((*i)->session, buf, 1023);
 	if (ret == GNUTLS_E_INTERRUPTED || ret == GNUTLS_E_AGAIN) {
 		(*i)->gnutls_state = _GNUTLS_RECV;
 		_gnutls_record_get_direction(*i);
