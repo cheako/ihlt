@@ -1,6 +1,9 @@
 sudo: required
 dist: trusty
 before_install:
+  - sudo su -c 'echo deb http://archive.ubuntu.com/ubuntu/ wily main >> /etc/apt/sources.list'
+  - sudo su -c 'echo deb http://archive.ubuntu.com/ubuntu/ wily-updates main >> /etc/apt/sources.list'
+  - sudo apt-get -y update
   - sudo apt-get -y install libgnutls28-dev
 addons:
   apt:
