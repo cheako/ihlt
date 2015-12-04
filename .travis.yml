@@ -1,5 +1,7 @@
 sudo: required
 dist: trusty
+before_install:
+  - sudo apt-get -y install libgnutls28-dev
 addons:
   apt:
     packages:
