@@ -87,7 +87,7 @@ void daemonize(char *pidfile) {
 	sigaddset(&newSigSet, SIGTSTP); /* ignore Tty stop signals */
 	sigaddset(&newSigSet, SIGTTOU); /* ignore Tty background writes */
 	sigaddset(&newSigSet, SIGTTIN); /* ignore Tty background reads */
-	sigprocmask(SIG_BLOCK, &newSigSet, NULL ); /* Block the above specified signals */
+	sigprocmask(SIG_BLOCK, &newSigSet, NULL); /* Block the above specified signals */
 
 	/* Set up a signal handler */
 	newSigAction.sa_handler = signal_handler;
@@ -95,9 +95,9 @@ void daemonize(char *pidfile) {
 	newSigAction.sa_flags = 0;
 
 	/* Signals to handle */
-	sigaction(SIGHUP, &newSigAction, NULL ); /* catch hangup signal */
-	sigaction(SIGTERM, &newSigAction, NULL ); /* catch term signal */
-	sigaction(SIGINT, &newSigAction, NULL ); /* catch interrupt signal */
+	sigaction(SIGHUP, &newSigAction, NULL); /* catch hangup signal */
+	sigaction(SIGTERM, &newSigAction, NULL); /* catch term signal */
+	sigaction(SIGINT, &newSigAction, NULL); /* catch interrupt signal */
 
 	/* Fork*/
 	pid = fork();
@@ -163,6 +163,10 @@ void daemonize(char *pidfile) {
 
 	/* write pid to lockfile */
 	write(pidFilehandle, str, strlen(str));
+}
+
+static void log_message(int level, const char *msg) {
+	fprintf(stderr, "[%5d|%2d] %s", getpid(), level, msg);
 }
 
 void main(int argc, char *argv[]) {
@@ -253,7 +257,7 @@ void main(int argc, char *argv[]) {
 		}
 	}
 
-	gpgme_check_version(NULL );
+	gpgme_check_version(NULL);
 
 	gpgme_ctx_t gm_ctx;
 	gpgme_error_t err = gpgme_new(&gm_ctx);
@@ -270,31 +274,31 @@ void main(int argc, char *argv[]) {
 	// GPGME_DATA_TYPE_PGP_KEY
 
 	size_t path_len = strlen(lopts.path_home) + strlen(lopts.path_name) + 3;
-	while (lopts.path_config == NULL )
+	while (lopts.path_config == NULL)
 		lopts.path_config = malloc(path_len);
 	sprintf(lopts.path_config, "%s/.%s", lopts.path_home, lopts.path_name);
 	char *path_key = NULL;
 	path_len += 4;
-	while (path_key == NULL )
+	while (path_key == NULL)
 		path_key = malloc(path_len);
 	sprintf(path_key, "%s/key", lopts.path_config);
 
 	path_len += 9;
-	while (lopts.certfile == NULL )
+	while (lopts.certfile == NULL)
 		lopts.certfile = malloc(path_len);
 	sprintf(lopts.certfile, "%s/certfile.txt", lopts.path_config);
 	path_len -= 1;
-	while (lopts.keyfile == NULL )
+	while (lopts.keyfile == NULL)
 		lopts.keyfile = malloc(path_len);
 	sprintf(lopts.keyfile, "%s/keyfile.txt", lopts.path_config);
 
 	FILE *fh = fopen(path_key, "rb");
 	char *key = NULL;
-	if (fh != NULL ) {
+	if (fh != NULL) {
 		fseek(fh, 0L, SEEK_END);
 		long s = ftell(fh) + 1;
 		rewind(fh);
-		while (key == NULL )
+		while (key == NULL)
 			key = malloc(s);
 		key[s] = '\0';
 		fread(key, --s, 1, fh);
@@ -351,6 +355,9 @@ void main(int argc, char *argv[]) {
 		 */
 
 	}
+
+	gnutls_global_set_log_level(5);
+	gnutls_global_set_log_function(log_message);
 
 	unsigned int bits = gnutls_sec_param_to_pk_bits(GNUTLS_PK_DH,
 			GNUTLS_SEC_PARAM_LEGACY);
