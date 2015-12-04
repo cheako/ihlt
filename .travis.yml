@@ -6,7 +6,7 @@ addons:
   apt:
     packages:
     - libgpgme11-dev
-    - libgnutls28-dev
+    - libio-socket-ssl-perl
     - libipc-run-perl
     - valgrind
 
