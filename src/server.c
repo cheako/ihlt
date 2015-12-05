@@ -85,6 +85,12 @@ void _gnutls_record_recv(struct ConnectionNode **i) {
 		(*i)->gnutls_state = _GNUTLS_READY;
 		FD_CLR((*i)->fd, &master_w);
 	}
+}
+
+// Send/receive raw data
+int sock_send(struct ConnectionNode *i, char *src, size_t size) {
+	if (!src)
+		return -1;
 
 	if (ret == 0) {
 		/* connection closed */
@@ -165,7 +171,7 @@ struct ProccessInputHandler {
 
 void ProccessInputFree(struct ConnectionNodeHandler *h) {
 	struct ProccessInputHandler *rm = (struct ProccessInputHandler *) h;
-	if (rm->buf != NULL )
+	if (rm->buf != NULL)
 		free(rm->buf);
 	free(rm);
 }
@@ -183,23 +189,23 @@ void LineLocator(struct ConnectionNode *conn) {
 		break;
 	};
 
-	for (str1 = h->buf;; str1 = NULL ) {
+	for (str1 = h->buf;; str1 = NULL) {
 		ntoken = strtok_r(str1, "\r\n", &saveptr1);
 		/* Reverse this so we know the next result. */
-		if (str1 == NULL ) {
+		if (str1 == NULL) {
 			if (ntoken != NULL || endswell) {
 				char *str2, *saveptr2, *subtoken;
 				char **argv = NULL;
-				while (argv == NULL )
+				while (argv == NULL)
 					argv = malloc(0);
 				int argc = 0;
 
-				for (str2 = token;; str2 = NULL ) {
+				for (str2 = token;; str2 = NULL) {
 					subtoken = strtok_r(str2, " \t", &saveptr2);
-					if (subtoken == NULL )
+					if (subtoken == NULL)
 						break;
 					void *i = NULL;
-					while (i == NULL )
+					while (i == NULL)
 						i = realloc(argv, sizeof(void*) * (argc + 1));
 					argv = i;
 					argv[argc++] = subtoken;
@@ -212,7 +218,7 @@ void LineLocator(struct ConnectionNode *conn) {
 							48);
 				} else
 					f(conn, argc, argv);
-				if (ntoken == NULL ) {
+				if (ntoken == NULL) {
 					free(h->buf);
 					h->buf = NULL;
 					h->nbytes = 0;
@@ -249,9 +255,9 @@ void ProccessInput(struct ConnectionNode *conn, char *buf, size_t nbytes) {
 		h->buf = NULL;
 		h->nbytes = 0;
 	} else {
-		if (h->buf != NULL ) {
+		if (h->buf != NULL) {
 			char *t = NULL;
-			while (t == NULL )
+			while (t == NULL)
 				t = realloc(h->buf, h->nbytes + 1);
 			strncat(t, buf, h->nbytes);
 			h->buf = t;
@@ -271,12 +277,16 @@ void OpenConnection(int listener, int *fdmax) { /* we got a new one... */
 	gnutls_init(&TempNode->session, GNUTLS_SERVER);
 #endif
 
-	gnutls_credentials_set (TempNode->session, GNUTLS_CRD_CERTIFICATE, &cred);
+	gnutls_credentials_set(TempNode->session, GNUTLS_CRD_CERTIFICATE, &cred);
 
-	gnutls_priority_set_direct(TempNode->session, "NORMAL:+CTYPE-OPENPGP",
-			NULL );
-	gnutls_certificate_server_set_request(TempNode->session,
-			GNUTLS_CERT_REQUEST);
+	// gnutls_priority_set_direct(TempNode->session, "NORMAL:+CTYPE-OPENPGP",
+	gnutls_priority_set_direct(TempNode->session,
+			"NONE:+VERS-TLS1.0:+CIPHER-ALL:+MAC-ALL:+SIGN-ALL:+COMP-ALL:+DHE-DSS:+DHE-RSA:+RSA:+CTYPE-OPENPGP",
+			NULL);
+
+	//gnutls_certificate_server_set_request(TempNode->session,
+	//		GNUTLS_CERT_REQUIRE);
+	//		GNUTLS_CERT_REQUEST);
 
 	TempNode->addr_len = sizeof(TempNode->addr);
 	if ((TempNode->fd = accept(listener, (struct sockaddr *) &TempNode->addr,
@@ -293,13 +303,13 @@ void OpenConnection(int listener, int *fdmax) { /* we got a new one... */
 			} else
 				*fdmax = TempNode->fd;
 
-		if (TempNode != NULL ) {
+		if (TempNode != NULL) {
 			TempNode->getnameinfo = getnameinfo(
 					(struct sockaddr *) &TempNode->addr, TempNode->addr_len,
 					TempNode->host, NI_MAXHOST, NULL, 0, 0);
 
 			struct ProccessInputHandler *handler = NULL;
-			while (handler == NULL )
+			while (handler == NULL)
 				handler = malloc(sizeof(struct ProccessInputHandler));
 			bzero(handler, sizeof(struct ProccessInputHandler));
 
@@ -314,14 +324,16 @@ void OpenConnection(int listener, int *fdmax) { /* we got a new one... */
 
 			/* add to master set */
 			FD_SET(TempNode->fd, &master_r);
-		}
 
 #if GNUTLS_VERSION_NUMBER >= 0x030109
-		gnutls_transport_set_int(TempNode->session, TempNode->fd);
+			gnutls_transport_set_int(TempNode->session, TempNode->fd);
 #else
 #error need at least 3.1.9 gnutls.
 #endif
-		_gnutls_handshake(TempNode);
+			_gnutls_handshake(TempNode);
+
+		}
+
 	}
 }
 
@@ -341,9 +353,6 @@ void EnterListener(struct ListenerOptions *opts) {
 	gnutls_global_init();
 
 	gnutls_certificate_allocate_credentials(&cred);
-
-	/*        gnutls_certificate_set_openpgp_keyring_file(cred, RINGFILE,
-	 GNUTLS_OPENPGP_FMT_BASE64); */
 
 	gnutls_certificate_set_openpgp_key_file(cred, opts->certfile, opts->keyfile,
 			GNUTLS_OPENPGP_FMT_BASE64);
@@ -372,7 +381,7 @@ void EnterListener(struct ListenerOptions *opts) {
 	 If socket(2) (or bind(2)) fails, we (close the socket
 	 and) try the next address. */
 
-	for (rp = result; rp != NULL ; rp = rp->ai_next) {
+	for (rp = result; rp != NULL; rp = rp->ai_next) {
 		listener = socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
 		if (listener == -1)
 			continue;
@@ -384,7 +393,7 @@ void EnterListener(struct ListenerOptions *opts) {
 #ifdef SO_REUSEPORT
 		if (setsockopt(listener, SOL_SOCKET, SO_REUSEPORT, &yes, sizeof(int))
 				== -1)
-			goto tryagain;
+		goto tryagain;
 
 #endif
 
@@ -394,7 +403,7 @@ void EnterListener(struct ListenerOptions *opts) {
 		tryagain: close(listener);
 	}
 
-	if (rp == NULL ) { /* No address succeeded */
+	if (rp == NULL) { /* No address succeeded */
 		fprintf(stderr, "Could not bind\n");
 		exit(EXIT_FAILURE);
 	}
@@ -416,7 +425,7 @@ void EnterListener(struct ListenerOptions *opts) {
 		read_fds = master_r;
 		write_fds = master_w;
 
-		if (select(fdmax + 1, &read_fds, &write_fds, NULL, NULL ) == -1) {
+		if (select(fdmax + 1, &read_fds, &write_fds, NULL, NULL) == -1) {
 			perror("Error waiting for input");
 			exit(EXIT_FAILURE);
 		}
@@ -426,7 +435,7 @@ void EnterListener(struct ListenerOptions *opts) {
 
 		/* run through the existing connections looking for data to be read */
 		struct ConnectionNode *i = connections_head;
-		if (connections_head != NULL )
+		if (connections_head != NULL)
 			do {
 				if (FD_ISSET(i->fd, &write_fds)) { /* we can tell gnutls to write... */
 					gnutls_ready(&i);
@@ -438,7 +447,7 @@ void EnterListener(struct ListenerOptions *opts) {
 					/* buffer for client data */
 					_gnutls_record_recv(&i);
 				}
-				if (i == NULL )
+				if (i == NULL)
 					break;
 				i = i->next;
 			} while (i != connections_head);
