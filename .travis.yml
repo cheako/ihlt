@@ -12,6 +12,7 @@ addons:
     - libio-socket-ssl-perl
     - libipc-run-perl
     - valgrind
+    - ltrace
 
 language: c
 compiler: gcc

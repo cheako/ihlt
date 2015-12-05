@@ -1,7 +1,9 @@
 all:
+	$(MAKE) -C example
 	$(MAKE) -C src
 
 clean:
+	$(MAKE) -C example clean
 	$(MAKE) -C src clean
 
 test: clean

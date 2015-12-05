@@ -1,7 +1,7 @@
 use Test::More tests => 27;
 use IPC::Run qw(start);
 
-my $ihlt = start( [ 'valgrind', '--error-exitcode=63', 'src/ihlt', '-f' ],
+my $ihlt = start( [ 'valgrind', '--error-exitcode=63', 'ltrace', 'src/ihlt', '-f' ],
     \undef, '>&2' );
 
 use IO::Socket::SSL;
