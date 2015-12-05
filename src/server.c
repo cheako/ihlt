@@ -278,9 +278,8 @@ void OpenConnection(int listener, int *fdmax) { /* we got a new one... */
 			"NONE:+VERS-TLS1.0:+CIPHER-ALL:+MAC-ALL:+SIGN-ALL:+COMP-ALL:+DHE-DSS:+DHE-RSA:+RSA:+CTYPE-OPENPGP",
 			NULL );
 
-	//gnutls_certificate_server_set_request(TempNode->session,
-	//		GNUTLS_CERT_REQUIRE);
-	//		GNUTLS_CERT_REQUEST);
+	gnutls_certificate_server_set_request(TempNode->session,
+			GNUTLS_CERT_REQUEST);
 
 	TempNode->addr_len = sizeof(TempNode->addr);
 	if ((TempNode->fd = accept(listener, (struct sockaddr *) &TempNode->addr,
