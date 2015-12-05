@@ -165,10 +165,6 @@ void daemonize(char *pidfile) {
 	write(pidFilehandle, str, strlen(str));
 }
 
-static void log_message(int level, const char *msg) {
-	fprintf(stderr, "[%5d|%2d] %s", getpid(), level, msg);
-}
-
 void main(int argc, char *argv[]) {
 	struct ListenerOptions lopts;
 	int c;
@@ -355,9 +351,6 @@ void main(int argc, char *argv[]) {
 		 */
 
 	}
-
-	gnutls_global_set_log_level(5);
-	gnutls_global_set_log_function(log_message);
 
 	unsigned int bits = gnutls_sec_param_to_pk_bits(GNUTLS_PK_DH,
 			GNUTLS_SEC_PARAM_LEGACY);
