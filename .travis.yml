@@ -7,7 +7,7 @@ before_install:
   - sudo su -c 'echo deb http://httpredir.debian.org/debian/ sid main contrib non-free >> /etc/apt/sources.list'
   - sudo apt-get -y update
   - apt-cache policy libgnutls28-dev libgnutls30 libgnutls-openssl27 libgnutlsxx28 libidn11-dev libgmp10 ibhogweed4 libnettle6 libp11-kit0 libtasn1-6
-  - sudo apt-get -y -t experimental install libgnutls28-dev libgnutls30 libgnutls-openssl27 libgnutlsxx28 libidn11-dev libgmp10 ibhogweed4 libnettle6 libp11-kit0 libtasn1-6
+  - sudo apt-get -y -t experimental install libgnutls28-dev libgnutls30 libgnutls-openssl27 libgnutlsxx28 libidn11-dev libgmp10 libhogweed4 libnettle6 libp11-kit0 libtasn1-6
 addons:
   apt:
     packages:
