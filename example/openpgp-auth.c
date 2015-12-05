@@ -82,6 +82,7 @@ void check_loaded_key(gnutls_certificate_credentials_t cred)
 		fail("get openpgp key %s\n",
 		     gnutls_strerror(err));
 
+#if GNUTLS_VERSION_NUMBER >= 0x030400
 	gnutls_openpgp_privkey_get_subkey_id(key, 0, keyid);
 	if (keyid[0] != 0xf3 || keyid[1] != 0x0f || keyid[2] != 0xd4 || keyid[3] != 0x23 ||
 	    keyid[4] != 0xc1 || keyid[5] != 0x43 || keyid[6] != 0xe7 || keyid[7] != 0xba)
@@ -91,6 +92,7 @@ void check_loaded_key(gnutls_certificate_credentials_t cred)
 	if (err != 0)
 		fail("get openpgp crts %s\n",
 		     gnutls_strerror(err));
+#endif
 
 	if (n_crts != 1)
 		fail("openpgp n_crts != 1\n");
