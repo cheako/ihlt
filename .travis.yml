@@ -5,7 +5,8 @@ before_install:
   - sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 7638D0442B90D010
   - sudo su -c 'echo deb http://http.us.debian.org/debian/ experimental main contrib non-free >> /etc/apt/sources.list'
   - sudo apt-get -y update
-  - sudo apt-get -y install libgnutls28-dev
+  - apt-cache policy libgnutls28-dev
+  - sudo apt-get -y install libgnutls28-dev/experimental
 addons:
   apt:
     packages:
