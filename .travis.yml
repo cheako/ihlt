@@ -3,9 +3,11 @@ dist: trusty
 before_install:
   - sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 8B48AD6246925553
   - sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 7638D0442B90D010
-  - sudo su -c 'echo deb http://http.us.debian.org/debian/ experimental main contrib non-free >> /etc/apt/sources.list'
+  - sudo su -c 'echo deb http://httpredir.debian.org/debian/ experimental main contrib non-free >> /etc/apt/sources.list'
+  - sudo su -c 'echo deb http://httpredir.debian.org/debian/ sid main contrib non-free >> /etc/apt/sources.list'
   - sudo apt-get -y update
-  - sudo apt-get -y -t experimental install libgnutls28-dev libgnutls30 libgnutls-openssl27 libgnutlsxx28 libidn11-dev
+  - apt-cache policy libgnutls28-dev libgnutls30 libgnutls-openssl27 libgnutlsxx28 libidn11-dev libgmp10 ibhogweed4 libnettle6 libp11-kit0 libtasn1-6
+  - sudo apt-get -y -t experimental install libgnutls28-dev libgnutls30 libgnutls-openssl27 libgnutlsxx28 libidn11-dev libgmp10 ibhogweed4 libnettle6 libp11-kit0 libtasn1-6
 addons:
   apt:
     packages:
