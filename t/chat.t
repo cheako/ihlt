@@ -13,7 +13,7 @@ for ( 1 .. 3 ) {
     do {
         diag "Connection $_ try $ctr: $!"
           if ( $ctr != 0 );
-        sleep( ( $_ == 1 && $ctr == 0 ) * 20 + $ctr );
+        sleep( ( $_ == 1 && $ctr == 0 ) * 70 + $ctr );
         $sockets[$_] = new IO::Socket::SSL(
             PeerHost => '127.0.0.1',
             PeerPort => '4458',
