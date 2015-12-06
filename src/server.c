@@ -273,10 +273,13 @@ void OpenConnection(int listener, int *fdmax) { /* we got a new one... */
 
 	gnutls_credentials_set(TempNode->session, GNUTLS_CRD_CERTIFICATE, &cred);
 
-	// gnutls_priority_set_direct(TempNode->session, "NORMAL:+CTYPE-OPENPGP",
-	gnutls_priority_set_direct(TempNode->session,
-			"NONE:+VERS-TLS1.0:+CIPHER-ALL:+MAC-ALL:+SIGN-ALL:+COMP-ALL:+DHE-DSS:+DHE-RSA:+RSA:+CTYPE-OPENPGP",
-			NULL );
+	// gnutls_priority_set_direct(TempNode->session, "NORMAL:+CTYPE-OPENPGP", NULL);
+	const char *bte;
+	int ret = gnutls_priority_set_direct(TempNode->session,
+			"+VERS-TLS1.0:+CIPHER-ALL:+MAC-ALL:+SIGN-ALL:+COMP-ALL:+DHE-DSS:+DHE-RSA:+RSA:+CTYPE-OPENPGP", &bte);
+	if(ret != GNUTLS_E_SUCCESS){
+		printf("TLS Priority error code=%d: %s\n", ret, bte);
+	}
 
 	gnutls_certificate_server_set_request(TempNode->session,
 			GNUTLS_CERT_REQUEST);
