@@ -352,8 +352,17 @@ void main(int argc, char *argv[]) {
 
 	}
 
-	unsigned int bits = gnutls_sec_param_to_pk_bits(GNUTLS_PK_DH,
-			GNUTLS_SEC_PARAM_LEGACY);
+	const char *pkcs3 =
+	    "-----BEGIN DH PARAMETERS-----\n"
+	    "MIGGAoGAtkxw2jlsVCsrfLqxrN+IrF/3W8vVFvDzYbLmxi2GQv9s/PQGWP1d9i22\n"
+	    "P2DprfcJknWt7KhCI1SaYseOQIIIAYP78CfyIpGScW/vS8khrw0rlQiyeCvQgF3O\n"
+	    "GeGOEywcw+oQT4SmFOD7H0smJe2CNyjYpexBXQ/A0mbTF9QKm1cCAQU=\n"
+	    "-----END DH PARAMETERS-----\n";
+	const gnutls_datum_t p3 =
+				    { (void *) pkcs3, strlen(pkcs3) };
+
+	/* unsigned int bits = gnutls_sec_param_to_pk_bits(GNUTLS_PK_DH,
+			GNUTLS_SEC_PARAM_LEGACY); */
 
 	/* Generate Diffie-Hellman parameters - for use with DHE
 	 * kx algorithms. These should be discarded and regenerated
@@ -361,7 +370,10 @@ void main(int argc, char *argv[]) {
 	 * security requirements.
 	 */
 	gnutls_dh_params_init(&lopts.dh_params);
-	gnutls_dh_params_generate2(lopts.dh_params, bits);
+	// gnutls_dh_params_generate2(lopts.dh_params, bits);
+
+	gnutls_dh_params_import_pkcs3(lopts.dh_params, &p3,
+								  GNUTLS_X509_FMT_PEM);
 
 	/* Logging */
 	setlogmask(LOG_UPTO(log_level));
