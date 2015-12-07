@@ -26,7 +26,12 @@ for ( 1 .. 3 ) {
         && $ctr++ < 4 );
     unless ( $sockets[$_] ) {
         fail "$_: $ctr: cannot connect to the server $!\n";
+
+        # Try connecting with another app.
+        diag `exec 2>&1; { echo quit; wait; } | gnutls-cli --priority="NONE:+VERS-TLS1.0:+CIPHER-ALL:+MAC-ALL:+SIGN-ALL:+COMP-ALL:+DHE-DSS:+DHE-RSA:+RSA:+CTYPE-OPENPGP" -p 4458 127.0.0.1`;
         $ihlt->kill_kill;
+        $ihlt->finish();
+        is $ihlt->result(0), 0, 'valgrind ok';
         die;
     }
     pass "$_: connected to the server";
