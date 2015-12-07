@@ -2,11 +2,9 @@ all:
 	$(MAKE) -C src
 
 clean:
-	$(MAKE) -C example clean
 	$(MAKE) -C src clean
 
 test: clean
-	CFLAGS=-g LDFLAGS=-g $(MAKE) -C example
 	CFLAGS=-g LDFLAGS=-g $(MAKE)
 	rm -rf ~/.ihlt
 	mkdir ~/.ihlt

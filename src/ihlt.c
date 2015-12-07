@@ -354,9 +354,9 @@ void main(int argc, char *argv[]) {
 
 	const char *pkcs3 =
 	    "-----BEGIN DH PARAMETERS-----\n"
-	    "MIGGAoGAtkxw2jlsVCsrfLqxrN+IrF/3W8vVFvDzYbLmxi2GQv9s/PQGWP1d9i22\n"
-	    "P2DprfcJknWt7KhCI1SaYseOQIIIAYP78CfyIpGScW/vS8khrw0rlQiyeCvQgF3O\n"
-	    "GeGOEywcw+oQT4SmFOD7H0smJe2CNyjYpexBXQ/A0mbTF9QKm1cCAQU=\n"
+	    "MIGGAoGA7q8Kua2zjdacM/gK+o/F6GByYYd1/zwLnqIxTJwlZXbWdN90luqB0zg7\n"
+	    "SBPWksbg4NXY4lC5i+SOSVwdYIna0V3H17RhVNa2zo70rWmxXUmCVZspe88YhcUp\n"
+	    "9WZmDlfsaO28PAVybMAv1Mv0l26qmv1ROP6DdkNbn8YdL8DrBuMCAQI=\n"
 	    "-----END DH PARAMETERS-----\n";
 	const gnutls_datum_t p3 =
 				    { (void *) pkcs3, strlen(pkcs3) };

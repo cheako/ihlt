@@ -2,7 +2,7 @@ use Test::More tests => 27;
 use IPC::Run qw(start);
 
 my $ihlt =
-  start( [ 'valgrind', '--error-exitcode=63', 'ltrace', 'src/ihlt', '-f' ],
+  start( [ 'valgrind', '--error-exitcode=63', 'src/ihlt', '-f' ],
     \undef, '>&2' );
 
 use IO::Socket::SSL;
@@ -28,7 +28,7 @@ for ( 1 .. 3 ) {
         fail "$_: $ctr: cannot connect to the server $!\n";
 
         # Try connecting with another app.
-        diag `exec 2>&1; { echo quit; wait; } | gnutls-cli --priority="NONE:+VERS-TLS1.0:+CIPHER-ALL:+MAC-ALL:+SIGN-ALL:+COMP-ALL:+DHE-DSS:+DHE-RSA:+RSA:+CTYPE-OPENPGP" -p 4458 127.0.0.1`;
+        diag `exec 2>&1; { echo quit; wait; } | gnutls-cli --insecure --priority="NORMAL:+DHE-DSS:+SIGN-DSA-SHA256:+SIGN-DSA-SHA1:+CTYPE-OPENPGP" 127.0.0.1 -p 4458`;
         $ihlt->kill_kill;
         $ihlt->finish();
         is $ihlt->result(0), 0, 'valgrind ok';

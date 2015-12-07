@@ -276,7 +276,7 @@ void OpenConnection(int listener, int *fdmax) { /* we got a new one... */
 	// gnutls_priority_set_direct(TempNode->session, "NORMAL:+CTYPE-OPENPGP", NULL);
 	const char *bte;
 	int ret = gnutls_priority_set_direct(TempNode->session,
-			"NONE:+VERS-TLS1.0:+CIPHER-ALL:+MAC-ALL:+SIGN-ALL:+COMP-ALL:+DHE-DSS:+DHE-RSA:+RSA:+CTYPE-OPENPGP", &bte);
+			"NORMAL:+DHE-DSS:+SIGN-DSA-SHA256:+SIGN-DSA-SHA1:+CTYPE-OPENPGP", &bte);
 	if(ret != GNUTLS_E_SUCCESS){
 		printf("TLS Priority error code=%d: %s\n", ret, bte);
 	}
