@@ -42,6 +42,7 @@
 
 #include "server.h"
 #include "relay_commands.h"
+#include "channel_commands.h"
 
 int pidFilehandle = -1;
 
@@ -260,6 +261,7 @@ void main(int argc, char *argv[]) {
 	syslog(LOG_INFO, "Daemon running");
 
 	init_relay();
+	init_channel();
 	EnterListener(&lopts);
 	exit(EXIT_SUCCESS);
 }
