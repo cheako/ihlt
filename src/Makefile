@@ -1,4 +1,6 @@
-ihlt : ConnectionsDoublyLinkedList.o protocol.o server.o relay_commands.o channel_commands.o BaseLookup.o cdecode.o
+LDLIBS=-lrt
+ihlt : ConnectionsDoublyLinkedList.o protocol.o server.o relay_commands.o \
+		channel_commands.o BaseLookup.o cdecode.o accounting.o
 
 ConnectionsDoublyLinkedList.o : ConnectionsDoublyLinkedList.h
 
@@ -15,6 +17,8 @@ BaseLookup.o : BaseLookup.h
 cdecode.o : cdecode.h
 
 cencode.o : cencode.h
+
+accounting.o : accounting.h
 
 clean:
 	rm -f *.o ihlt

@@ -30,6 +30,7 @@
 
 #include "channel_commands.h"
 #include "BaseLookup.h"
+#include "accounting.h"
 
 struct channel_handler {
 	void (*func)(struct ConnectionNode *, struct channel_handler *, char *,
@@ -52,25 +53,32 @@ void channel_handler_free(struct ConnectionNode *i, struct channel_handler *h) {
 	free(h);
 }
 
-fd_set *channel_get_fd_set(char *arg) {
+struct channel_data {
+	fd_set fd;
+	struct token_faucet tf;
+};
+
+struct channel_data *channel_get_data(char *arg) {
 	struct Base *b = StrToBase(arg);
 	struct BaseTable *baset = LookupBase(b);
 	free(b);
 	if (baset->data == NULL ) {
 		while (baset->data == NULL )
-			baset->data = malloc(sizeof(fd_set));
-		FD_ZERO((fd_set *)(baset->data));
+			baset->data = malloc(sizeof(struct channel_data));
+		FD_ZERO(&((struct channel_data *)(baset->data))->fd);
+		token_faucet_init(&((struct channel_data *) (baset->data))->tf, 1);
 	}
-	return (fd_set *) (baset->data);
+	return (struct channel_data *) (baset->data);
 }
 
 int listen_func(struct ConnectionNode *conn, int argc, char **argv) {
-	fd_set *r;
+	struct channel_data *r;
+	char t[128];
 	struct channel_handler *h = NULL;
 	printf("listen \"%s\" %s on socket %d index %d\n", argv[1], conn->host,
 			conn->fd, conn->index);
-	r = channel_get_fd_set(argv[1]);
-	FD_SET(conn->fd, r);
+	r = channel_get_data(argv[1]);
+	FD_SET(conn->fd, &r->fd);
 
 	while (h == NULL )
 		h = malloc(sizeof(struct channel_handler));
@@ -78,8 +86,14 @@ int listen_func(struct ConnectionNode *conn, int argc, char **argv) {
 	h->free = &channel_handler_free;
 	h->prev = conn->handler;
 	conn->handler = (struct ConnectionNodeHandler *) h;
-	h->fds = r;
+	h->fds = &r->fd;
 
+	r->tf.tokens = token_faucet_get(&r->tf) + 300000;
+	sprintf(t,
+			"211 listen: total connections(%d) connection rate(%d) listen rate(%d)\n",
+			total_connections, token_faucet_get(&new_connections_faucet),
+			token_faucet_get(&r->tf));
+	sock_send(conn->fd, t, strlen(t));
 	return 0;
 }
 
@@ -87,10 +101,10 @@ int send_func(struct ConnectionNode *conn, int argc, char **argv) {
 	int i;
 	size_t n;
 	char *t = NULL;
-	fd_set *fds;
+	struct channel_data *data;
 	printf("send \"%s\" %s on socket %d index %d\n", argv[1], conn->host,
 			conn->fd, conn->index);
-	fds = channel_get_fd_set(argv[1]);
+	data = channel_get_data(argv[1]);
 
 	while (t == NULL )
 		t = strdup("211 send:");
@@ -107,7 +121,7 @@ int send_func(struct ConnectionNode *conn, int argc, char **argv) {
 	struct ConnectionNode *dest;
 	for (dest = conn->next; dest != conn; dest = dest->next) {
 		char *r = NULL;
-		if (FD_ISSET(dest->fd, fds)) {
+		if (FD_ISSET(dest->fd, &data->fd)) {
 			printf("socket send to %s on socket %d index %d\n", dest->host,
 					dest->fd, dest->index);
 			sock_send(dest->fd, t, strlen(t));

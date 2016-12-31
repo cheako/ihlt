@@ -82,13 +82,15 @@ $sockets[3]->recv( $response, 28 );
 is $response, "211 wall: Hello World!\r\n", 'wall msg recv';
 
 is $sockets[1]->send("listen 8AAAA\n"), 13, 'listen 0xF0 sent';
-sleep 1;
+$sockets[1]->recv( $response, 128 );
+warn $response;
 is $sockets[3]->send("send 8AAAA test12\n"), 18, 'send msg to 0xF0';
 $sockets[1]->recv( $response, 28 );
 is $response, "211 send: 8AAAA test12\r\n", 'channel 0xF0 msg recv';
 
 is $sockets[2]->send("listen 8AAADw\n"), 14, 'listen 0xF000000F sent';
-sleep 1;
+$sockets[2]->recv( $response, 128 );
+warn $response;
 is $sockets[1]->send("send 8AAADw test1\n"), 18, 'send msg to 0xF000000F';
 $sockets[2]->recv( $response, 28 );
 is $response, "211 send: 8AAADw test1\r\n", 'channel 0xF000000F msg recv';

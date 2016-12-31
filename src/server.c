@@ -36,6 +36,7 @@
 #include <string.h>
 
 #include "server.h"
+#include "accounting.h"
 
 /** Send/receive raw dataa */
 int sock_send(int fd, char *src, size_t size) {
@@ -210,6 +211,9 @@ static void OpenConnection(int listener, int *fdmax, fd_set *master) { /* we got
 			printf("New connection from %s on socket %d index %d\n",
 					TempNode->host, TempNode->fd, TempNode->index);
 
+			total_connections++;
+			new_connections_faucet.tokens = token_faucet_get(&new_connections_faucet) + 300000;  /* 5min */
+
 			/* add to master set */
 			FD_SET(TempNode->fd, master);
 		}
@@ -324,6 +328,7 @@ void EnterListener(struct ListenerOptions *opts) {
 							perror("Negative recv");
 						/* close it... */
 						close(i->fd);
+						total_connections--;
 						/* remove from master set */
 						FD_CLR(i->fd, &master);
 						/* step back and remove this connection */
