@@ -1,6 +1,7 @@
 LDLIBS=-lrt
 ihlt : ConnectionsDoublyLinkedList.o protocol.o server.o relay_commands.o \
-		channel_commands.o BaseLookup.o cdecode.o accounting.o
+		channel_commands.o BaseLookup.o cdecode.o accounting.o \
+		storage_commands.o
 
 ConnectionsDoublyLinkedList.o : ConnectionsDoublyLinkedList.h
 
@@ -19,6 +20,8 @@ cdecode.o : cdecode.h
 cencode.o : cencode.h
 
 accounting.o : accounting.h
+
+storage_commands.o : storage_commands.h
 
 clean:
 	rm -f *.o ihlt

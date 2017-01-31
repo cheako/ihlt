@@ -1,4 +1,4 @@
-use Test::More tests => 33;
+use Test::More tests => 49;
 use IPC::Run qw(start);
 
 my $ihlt =
@@ -94,6 +94,40 @@ warn $response;
 is $sockets[1]->send("send 8AAADw test1\n"), 18, 'send msg to 0xF000000F';
 $sockets[2]->recv( $response, 28 );
 is $response, "211 send: 8AAADw test1\r\n", 'channel 0xF000000F msg recv';
+
+# 1483250400  Sun Jan  1 00:00:00 CST 2017
+# 1485962931 - 1483250400 = 2712531
+is $sockets[1]->send("store ok 3 2712531 ::1 4458 dat hi\n"), 35, 'store long msg sent';
+$sockets[1]->recv( $response, 4096 );
+is $response, "504 Too many parameters.\r\n", 'store ok msg recv';
+
+is $sockets[1]->send("store ok 3 2712531 ::1\n"), 23, 'store short msg sent';
+$sockets[1]->recv( $response, 4096 );
+is $response, "501 Too few parameters.\r\n", 'store ok msg recv';
+
+is $sockets[1]->send("store ok hi 2712531 ::1 4458\n"), 29, 'store rating msg sent';
+$sockets[1]->recv( $response, 4096 );
+is $response, "501 Invalid rating.\r\n", 'store rating msg recv';
+
+is $sockets[1]->send("store ok 3 hi ::1 4458\n"), 23, 'store time msg sent';
+$sockets[1]->recv( $response, 4096 );
+is $response, "501 Invalid time.\r\n", 'store time msg recv';
+
+is $sockets[1]->send("store ok 3 2712531 hi 4458\n"), 27, 'store address msg sent';
+$sockets[1]->recv( $response, 4096 );
+is $response, "501 Invalid network address.\r\n", 'store address msg recv';
+
+is $sockets[1]->send("store ok 3 2712531 ::1 hi\n"), 26, 'store port msg sent';
+$sockets[1]->recv( $response, 4096 );
+is $response, "501 Invalid port.\r\n", 'store port msg recv';
+
+is $sockets[1]->send("store ok 3 2712531 ::1 4458 word\n"), 33, 'store good msg sent';
+$sockets[1]->recv( $response, 4096 );
+is $response, "220 Saved word\r\n", 'store good msg recv';
+
+is $sockets[1]->send("load ok\n"), 8, 'load msg sent';
+$sockets[1]->recv( $response, 4096 );
+is $response, "220 ok is 3 2712531 ::1 4458 word\r\n", 'load msg recv';
 
 is $sockets[2]->send("quit\r\n"), 6, 'sent quit';
 

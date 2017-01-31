@@ -39,6 +39,24 @@ extern struct BaseTable *LookupBase(struct Base *);
 //Remove a Base Table
 extern void DeleteBase(struct BaseTable **);
 
+struct BaseFind {
+	int n;
+	struct BaseSeeker {
+		struct BaseTable *b;
+		signed char i;
+		bool f;
+	} s[];
+};
+
+/* Adjust for index vs numbered count */
+#define BASE_FIND_CURRENT(f) ((f).s[(f).n - 1])
+
+extern struct BaseFind *BaseFindInit(struct BaseTable *);
+
+extern bool BaseFindNext(struct BaseFind **);
+
+extern bool BaseFindPrev(struct BaseFind **);
+
 extern struct Base *StrToBase(char *);
 
 #endif /* BaseLookup_H_ */

@@ -109,6 +109,86 @@ void DeleteBase(struct BaseTable ** del) {
 	// Where to assign one?
 }
 
+struct BaseFind *BaseFindInit(struct BaseTable *b) {
+	struct BaseFind *ret = NULL;
+	while (ret == NULL )
+		ret = malloc(sizeof(struct BaseFind) + sizeof(struct BaseSeeker));
+	ret->n = 1;
+	ret->s[0].i = 0;
+	ret->s[0].f = true;
+	ret->s[0].b = b;
+}
+
+bool BaseFindNext(struct BaseFind **s) {
+	struct BaseSeeker *stacki = &BASE_FIND_CURRENT(**s);
+	while(1) {
+		if(stacki->i > 15) {
+			if(stacki->f) {
+				stacki->f = false;
+				return(true);
+			}
+			(*s)->n--;
+			struct BaseFind *ret = NULL;
+			while(ret == NULL)
+			ret = realloc(*s, sizeof(struct BaseFind) + sizeof(struct BaseSeeker) * (*s)->n);
+			*s = ret;
+
+			if((*s)->n == 0) return(false);
+			stacki = &BASE_FIND_CURRENT(**s);
+		} else {
+			struct BaseTable *canidate = stacki->b->next[stacki->i++];
+			if(canidate != NULL) {
+				(*s)->n++; /* Can't be too high or we'd be out of mem. */
+				struct BaseFind *ret = NULL;
+				while(ret == NULL)
+					ret = realloc(*s, sizeof(struct BaseFind) + sizeof(struct BaseSeeker) * (*s)->n);
+				*s = ret;
+
+				stacki = &BASE_FIND_CURRENT(**s);
+
+				stacki->i = 0;
+				stacki->f = true;
+				stacki->b = canidate;
+			}
+		}
+	}
+}
+
+bool BaseFindPrev(struct BaseFind **s) {
+	struct BaseSeeker *stacki = &BASE_FIND_CURRENT(**s);
+	while(1) {
+		if(stacki->i < 0) {
+			if(stacki->f) {
+				stacki->f = false;
+				return(true);
+			}
+			(*s)->n--;
+			struct BaseFind *ret = NULL;
+			while(ret == NULL)
+			ret = realloc(*s, sizeof(struct BaseFind) + sizeof(struct BaseSeeker) * (*s)->n);
+			*s = ret;
+
+			if((*s)->n == 0) return(false);
+			stacki = &BASE_FIND_CURRENT(**s);
+		} else {
+			struct BaseTable *canidate = stacki->b->next[stacki->i--];
+			if(canidate != NULL) {
+				(*s)->n++; /* Can't be too high or we'd be out of mem. */
+				struct BaseFind *ret = NULL;
+				while(ret == NULL)
+				ret = realloc(*s, sizeof(struct BaseFind) + sizeof(struct BaseSeeker) * (*s)->n);
+				*s = ret;
+
+				stacki = &BASE_FIND_CURRENT(**s);
+
+				stacki->i = 15;
+				stacki->f = true;
+				stacki->b = canidate;
+			}
+		}
+	}
+}
+
 struct Base *StrToBase(char *arg) {
 	char r[] = "AAAAAAAAAAAAAAAAAAAAAA==";
 	base64_decodestate state_in;
