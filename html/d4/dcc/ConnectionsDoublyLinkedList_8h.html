@@ -94,23 +94,30 @@ var searchBox = new SearchBox("searchBox", "../../search",false,'Search');
 <tr><td colspan="2"><h2><a name="nested-classes"></a>
 Data Structures</h2></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../df/d3d/structConnectionNode.html">ConnectionNode</a></td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">used for each connection  <a href="../../df/d3d/structConnectionNode.html#details">More...</a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d4/d91/structConnectionNode_1_1ConnectionNodeHandler.html">ConnectionNode::ConnectionNodeHandler</a></td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">string returned from getnameinfo  <a href="../../d4/d91/structConnectionNode_1_1ConnectionNodeHandler.html#details">More...</a><br/></td></tr>
 <tr><td colspan="2"><h2><a name="define-members"></a>
 Defines</h2></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d4/dcc/ConnectionsDoublyLinkedList_8h.html#ac8a157ef0105da1f325e69879cf274b0">CONNECTION_NODE_SIZE</a>&#160;&#160;&#160;sizeof(struct <a class="el" href="../../df/d3d/structConnectionNode.html">ConnectionNode</a>)</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">how big is out mighty hero?  <a href="#ac8a157ef0105da1f325e69879cf274b0"></a><br/></td></tr>
 <tr><td colspan="2"><h2><a name="func-members"></a>
 Functions</h2></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">struct <a class="el" href="../../df/d3d/structConnectionNode.html">ConnectionNode</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d4/dcc/ConnectionsDoublyLinkedList_8h.html#a3afbd7690621e2a713d6ba93cfbcfb51">GetNewConnection</a> ()</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">creates a new Node and returns pointer to it.  <a href="#a3afbd7690621e2a713d6ba93cfbcfb51"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d4/dcc/ConnectionsDoublyLinkedList_8h.html#abb8b2ffb77a996373ce0d8b38c2c1af1">InsertConnectionBefore</a> (struct <a class="el" href="../../df/d3d/structConnectionNode.html">ConnectionNode</a> **, struct <a class="el" href="../../df/d3d/structConnectionNode.html">ConnectionNode</a> *)</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">inserts a Connection into doubly linked list  <a href="#abb8b2ffb77a996373ce0d8b38c2c1af1"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">struct <a class="el" href="../../df/d3d/structConnectionNode.html">ConnectionNode</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d4/dcc/ConnectionsDoublyLinkedList_8h.html#a3d3e5485084c9e9f8bd626a7b74ce4d9">RemoveConnection</a> (struct <a class="el" href="../../df/d3d/structConnectionNode.html">ConnectionNode</a> *)</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">removes a Connection from doubly linked list  <a href="#a3d3e5485084c9e9f8bd626a7b74ce4d9"></a><br/></td></tr>
 <tr><td colspan="2"><h2><a name="var-members"></a>
 Variables</h2></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">struct <a class="el" href="../../df/d3d/structConnectionNode.html">ConnectionNode</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d4/dcc/ConnectionsDoublyLinkedList_8h.html#a215c04c8305c3000ef45718ace3332f8">connections_head</a></td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">pointer to assumed lowest node.  <a href="#a215c04c8305c3000ef45718ace3332f8"></a><br/></td></tr>
 </table>
 <hr/><a name="details" id="details"></a><h2>Detailed Description</h2>
 <div class="textblock"><p>Doubly Linked List used for each connection. </p>
 <dl class="author"><dt><b>Author:</b></dt><dd>Mike Mestnik</dd></dl>
-<p>Example from: <a href="https://gist.github.com/mycodeschool/7429492">https://gist.github.com/mycodeschool/7429492</a> </p>
+<p>Example from: [<a href="https://gist.github.com/mycodeschool/7429492">https://gist.github.com/mycodeschool/7429492</a>] </p>
 </div><hr/><h2>Define Documentation</h2>
 <a class="anchor" id="ac8a157ef0105da1f325e69879cf274b0"></a><!-- doxytag: member="ConnectionsDoublyLinkedList.h::CONNECTION_NODE_SIZE" ref="ac8a157ef0105da1f325e69879cf274b0" args="" -->
 <div class="memitem">
@@ -122,7 +129,8 @@ Variables</h2></td></tr>
       </table>
 </div>
 <div class="memdoc">
-<p>How big is out mighty hero? </p>
+
+<p>how big is out mighty hero? </p>
 
 </div>
 </div>
@@ -140,7 +148,8 @@ Variables</h2></td></tr>
       </table>
 </div>
 <div class="memdoc">
-<p>Creates a new Node and returns pointer to it. </p>
+
+<p>creates a new Node and returns pointer to it. </p>
 
 </div>
 </div>
@@ -168,7 +177,8 @@ Variables</h2></td></tr>
       </table>
 </div>
 <div class="memdoc">
-<p>Inserts a Connection into doubly linked list </p>
+
+<p>inserts a Connection into doubly linked list </p>
 
 </div>
 </div>
@@ -186,7 +196,8 @@ Variables</h2></td></tr>
       </table>
 </div>
 <div class="memdoc">
-<p>Removes a Connection from doubly linked list </p>
+
+<p>removes a Connection from doubly linked list </p>
 
 </div>
 </div>
@@ -201,7 +212,8 @@ Variables</h2></td></tr>
       </table>
 </div>
 <div class="memdoc">
-<p>global variable - pointer to assumed lowest node. </p>
+
+<p>pointer to assumed lowest node. </p>
 
 </div>
 </div>
@@ -223,7 +235,7 @@ Variables</h2></td></tr>
 
 
 <hr class="footer"/><address class="footer"><small>
-Generated on Mon Mar 13 2017 06:27:42 for Ihlt Hopefully the Last Tracker by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Tue Mar 14 2017 03:42:42 for Ihlt Hopefully the Last Tracker by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="../../doxygen.png" alt="doxygen"/>
 </a> 1.7.6.1
 </small></address>

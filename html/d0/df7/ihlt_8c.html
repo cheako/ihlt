@@ -83,6 +83,9 @@ var searchBox = new SearchBox("searchBox", "../../search",false,'Search');
 <div class="title">src/ihlt.c File Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
+
+<p>main entry point  
+<a href="#details">More...</a></p>
 <div class="textblock"><code>#include &lt;sys/stat.h&gt;</code><br/>
 <code>#include &lt;netdb.h&gt;</code><br/>
 <code>#include &lt;stdio.h&gt;</code><br/>
@@ -102,19 +105,21 @@ var searchBox = new SearchBox("searchBox", "../../search",false,'Search');
 <tr><td colspan="2"><h2><a name="define-members"></a>
 Defines</h2></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d0/df7/ihlt_8c.html#a5ea777c6fb1dd39fda46cdf97a6949a5">DAEMON_NAME</a>&#160;&#160;&#160;&quot;ihlt&quot;</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">to toot my own horn  <a href="#a5ea777c6fb1dd39fda46cdf97a6949a5"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d0/df7/ihlt_8c.html#a614217d263be1fb1a5f76e2ff7be19a2">PORT</a>&#160;&#160;&#160;&quot;4458&quot;</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">port we're listening on, phone coded msg  <a href="#a614217d263be1fb1a5f76e2ff7be19a2"></a><br/></td></tr>
 <tr><td colspan="2"><h2><a name="func-members"></a>
 Functions</h2></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d0/df7/ihlt_8c.html#ac7e7a9122c7ddaf918f8d767318ab0bf">daemonize</a> (char *pidfile)</td></tr>
-<tr><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d0/df7/ihlt_8c.html#adcffc4034d40ed182e002c6829010fcb">daemonShutdown</a> ()</td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d0/df7/ihlt_8c.html#a91a3bbcc7eb26e8695255b2795d6e46f">main</a> (int argc, char *argv[])</td></tr>
-<tr><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d0/df7/ihlt_8c.html#a6bc99b19e2c14857ad0044c7b8eb6c78">no_daemonize</a> (char *pidfile)</td></tr>
-<tr><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d0/df7/ihlt_8c.html#a6aa59f98cad89c73966351ad7afb303c">signal_handler</a> (int sig)</td></tr>
 <tr><td colspan="2"><h2><a name="var-members"></a>
 Variables</h2></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d0/df7/ihlt_8c.html#a2a63e915d5181836d9e86d4924d4b522">pidFilehandle</a></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d0/df7/ihlt_8c.html#a2a63e915d5181836d9e86d4924d4b522">pidFilehandle</a> = -1</td></tr>
 </table>
-<hr/><h2>Define Documentation</h2>
+<hr/><a name="details" id="details"></a><h2>Detailed Description</h2>
+<div class="textblock"><p>main entry point </p>
+<dl class="author"><dt><b>Author:</b></dt><dd>Mike Mestnik</dd></dl>
+<p>example from: [<a href="http://www.4pmp.com/2009/12/a-simple-daemon-in-c">http://www.4pmp.com/2009/12/a-simple-daemon-in-c</a>] </p>
+</div><hr/><h2>Define Documentation</h2>
 <a class="anchor" id="a5ea777c6fb1dd39fda46cdf97a6949a5"></a><!-- doxytag: member="ihlt.c::DAEMON_NAME" ref="a5ea777c6fb1dd39fda46cdf97a6949a5" args="" -->
 <div class="memitem">
 <div class="memproto">
@@ -125,6 +130,8 @@ Variables</h2></td></tr>
       </table>
 </div>
 <div class="memdoc">
+
+<p>to toot my own horn </p>
 
 </div>
 </div>
@@ -138,44 +145,12 @@ Variables</h2></td></tr>
       </table>
 </div>
 <div class="memdoc">
-<p>port we're listening on phone coded msg </p>
+
+<p>port we're listening on, phone coded msg </p>
 
 </div>
 </div>
 <hr/><h2>Function Documentation</h2>
-<a class="anchor" id="ac7e7a9122c7ddaf918f8d767318ab0bf"></a><!-- doxytag: member="ihlt.c::daemonize" ref="ac7e7a9122c7ddaf918f8d767318ab0bf" args="(char *pidfile)" -->
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void <a class="el" href="../../d0/df7/ihlt_8c.html#ac7e7a9122c7ddaf918f8d767318ab0bf">daemonize</a> </td>
-          <td>(</td>
-          <td class="paramtype">char *&#160;</td>
-          <td class="paramname"><em>pidfile</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div>
-<div class="memdoc">
-
-</div>
-</div>
-<a class="anchor" id="adcffc4034d40ed182e002c6829010fcb"></a><!-- doxytag: member="ihlt.c::daemonShutdown" ref="adcffc4034d40ed182e002c6829010fcb" args="()" -->
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void <a class="el" href="../../d0/df7/ihlt_8c.html#adcffc4034d40ed182e002c6829010fcb">daemonShutdown</a> </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div>
-<div class="memdoc">
-
-</div>
-</div>
 <a class="anchor" id="a91a3bbcc7eb26e8695255b2795d6e46f"></a><!-- doxytag: member="ihlt.c::main" ref="a91a3bbcc7eb26e8695255b2795d6e46f" args="(int argc, char *argv[])" -->
 <div class="memitem">
 <div class="memproto">
@@ -203,47 +178,13 @@ Variables</h2></td></tr>
 
 </div>
 </div>
-<a class="anchor" id="a6bc99b19e2c14857ad0044c7b8eb6c78"></a><!-- doxytag: member="ihlt.c::no_daemonize" ref="a6bc99b19e2c14857ad0044c7b8eb6c78" args="(char *pidfile)" -->
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void <a class="el" href="../../d0/df7/ihlt_8c.html#a6bc99b19e2c14857ad0044c7b8eb6c78">no_daemonize</a> </td>
-          <td>(</td>
-          <td class="paramtype">char *&#160;</td>
-          <td class="paramname"><em>pidfile</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div>
-<div class="memdoc">
-
-</div>
-</div>
-<a class="anchor" id="a6aa59f98cad89c73966351ad7afb303c"></a><!-- doxytag: member="ihlt.c::signal_handler" ref="a6aa59f98cad89c73966351ad7afb303c" args="(int sig)" -->
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void <a class="el" href="../../d0/df7/ihlt_8c.html#a6aa59f98cad89c73966351ad7afb303c">signal_handler</a> </td>
-          <td>(</td>
-          <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>sig</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div>
-<div class="memdoc">
-
-</div>
-</div>
 <hr/><h2>Variable Documentation</h2>
 <a class="anchor" id="a2a63e915d5181836d9e86d4924d4b522"></a><!-- doxytag: member="ihlt.c::pidFilehandle" ref="a2a63e915d5181836d9e86d4924d4b522" args="" -->
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">int <a class="el" href="../../d0/df7/ihlt_8c.html#a2a63e915d5181836d9e86d4924d4b522">pidFilehandle</a></td>
+          <td class="memname">int <a class="el" href="../../d0/df7/ihlt_8c.html#a2a63e915d5181836d9e86d4924d4b522">pidFilehandle</a> = -1</td>
         </tr>
       </table>
 </div>
@@ -269,7 +210,7 @@ Variables</h2></td></tr>
 
 
 <hr class="footer"/><address class="footer"><small>
-Generated on Mon Mar 13 2017 06:27:42 for Ihlt Hopefully the Last Tracker by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Tue Mar 14 2017 03:42:42 for Ihlt Hopefully the Last Tracker by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="../../doxygen.png" alt="doxygen"/>
 </a> 1.7.6.1
 </small></address>

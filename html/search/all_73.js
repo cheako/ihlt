@@ -6,7 +6,6 @@ var searchData=
   ['server_2ec',['server.c',['../d1/d20/server_8c.html',1,'']]],
   ['server_2eh',['server.h',['../d8/dc3/server_8h.html',1,'']]],
   ['servname',['servname',['../d9/d97/structListenerOptions.html#aabcdf452d7cc8509f8c379c96d0f361f',1,'ListenerOptions']]],
-  ['signal_5fhandler',['signal_handler',['../d0/df7/ihlt_8c.html#a6aa59f98cad89c73966351ad7afb303c',1,'ihlt.c']]],
   ['sock_5fsend',['sock_send',['../d1/d20/server_8c.html#a51c90659c0cb72046250aecba8492b6c',1,'sock_send(int fd, char *src, size_t size):&#160;server.c'],['../d8/dc3/server_8h.html#a55d1dba25baef862aad1520e95d95e4b',1,'sock_send(int, char *, size_t):&#160;server.c']]],
   ['step',['step',['../d7/d35/structbase64__decodestate.html#aae3e4ee2b4915ae7287367d452c23d86',1,'base64_decodestate::step()'],['../d1/d87/structbase64__encodestate.html#af4b9783ff9191fadca531df220a38b5e',1,'base64_encodestate::step()']]],
   ['step_5fa',['step_A',['../d7/ddf/cencode_8h.html#aa0ddacd74de976db0a12b0fc691c72f6aba51e7ba06286787a3be48bc8800fe5e',1,'step_A():&#160;cencode.h'],['../d6/d89/cdecode_8h.html#aeba20dd8a11380cd9be8d20a36364f55a4463475d4a6cb608ca8e107ffca55a78',1,'step_a():&#160;cdecode.h']]],

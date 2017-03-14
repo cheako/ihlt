@@ -103,16 +103,16 @@ Data Structures</h2></td></tr>
 <tr><td colspan="2"><h2><a name="func-members"></a>
 Functions</h2></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d1/d20/server_8c.html#afec2d252061dfabbb814114f8916ca10">EnterListener</a> (struct <a class="el" href="../../d9/d97/structListenerOptions.html">ListenerOptions</a> *opts)</td></tr>
-<tr><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d1/d20/server_8c.html#a981132e5c3d7cb4a26e23e3f93f24680">LineLocator</a> (struct <a class="el" href="../../df/d3d/structConnectionNode.html">ConnectionNode</a> *conn, struct <a class="el" href="../../da/dca/structProccessInputHandler.html">ProccessInputHandler</a> *h)</td></tr>
-<tr><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d1/d20/server_8c.html#a1544dfd21639260d1f98e1ba45feaea5">OpenConnection</a> (int listener, int *fdmax, fd_set *master)</td></tr>
-<tr><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d1/d20/server_8c.html#a99661b405a324e79761947bec618bd11">ProccessInput</a> (struct <a class="el" href="../../df/d3d/structConnectionNode.html">ConnectionNode</a> *conn, struct <a class="el" href="../../da/dca/structProccessInputHandler.html">ProccessInputHandler</a> *h, char *buf, size_t nbytes)</td></tr>
-<tr><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d1/d20/server_8c.html#ad6fba4bde478f009cb0e50fe4e8270a6">ProccessInputFree</a> (struct <a class="el" href="../../df/d3d/structConnectionNode.html">ConnectionNode</a> *i, struct <a class="el" href="../../da/dca/structProccessInputHandler.html">ProccessInputHandler</a> *h)</td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../d1/d20/server_8c.html#a51c90659c0cb72046250aecba8492b6c">sock_send</a> (int fd, char *src, size_t size)</td></tr>
 </table>
 <hr/><a name="details" id="details"></a><h2>Detailed Description</h2>
 <div class="textblock"><p>using select() for I/O multiplexing </p>
 <dl class="author"><dt><b>Author:</b></dt><dd>Mike Mestnik</dd></dl>
-<p>Example from: <a href="http://www.tenouk.com/Module41.html">http://www.tenouk.com/Module41.html</a> <a href="http://linux.die.net/man/3/getaddrinfo">http://linux.die.net/man/3/getaddrinfo</a> </p>
+<p>Example from:</p>
+<ul>
+<li>[<a href="http://www.tenouk.com/Module41.html">http://www.tenouk.com/Module41.html</a>]</li>
+<li>[<a href="http://linux.die.net/man/3/getaddrinfo">http://linux.die.net/man/3/getaddrinfo</a>] </li>
+</ul>
 </div><hr/><h2>Function Documentation</h2>
 <a class="anchor" id="afec2d252061dfabbb814114f8916ca10"></a><!-- doxytag: member="server.c::EnterListener" ref="afec2d252061dfabbb814114f8916ca10" args="(struct ListenerOptions *opts)" -->
 <div class="memitem">
@@ -124,132 +124,6 @@ Functions</h2></td></tr>
           <td class="paramtype">struct <a class="el" href="../../d9/d97/structListenerOptions.html">ListenerOptions</a> *&#160;</td>
           <td class="paramname"><em>opts</em></td><td>)</td>
           <td></td>
-        </tr>
-      </table>
-</div>
-<div class="memdoc">
-
-</div>
-</div>
-<a class="anchor" id="a981132e5c3d7cb4a26e23e3f93f24680"></a><!-- doxytag: member="server.c::LineLocator" ref="a981132e5c3d7cb4a26e23e3f93f24680" args="(struct ConnectionNode *conn, struct ProccessInputHandler *h)" -->
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void <a class="el" href="../../d1/d20/server_8c.html#a981132e5c3d7cb4a26e23e3f93f24680">LineLocator</a> </td>
-          <td>(</td>
-          <td class="paramtype">struct <a class="el" href="../../df/d3d/structConnectionNode.html">ConnectionNode</a> *&#160;</td>
-          <td class="paramname"><em>conn</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">struct <a class="el" href="../../da/dca/structProccessInputHandler.html">ProccessInputHandler</a> *&#160;</td>
-          <td class="paramname"><em>h</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div>
-<div class="memdoc">
-
-</div>
-</div>
-<a class="anchor" id="a1544dfd21639260d1f98e1ba45feaea5"></a><!-- doxytag: member="server.c::OpenConnection" ref="a1544dfd21639260d1f98e1ba45feaea5" args="(int listener, int *fdmax, fd_set *master)" -->
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void <a class="el" href="../../d1/d20/server_8c.html#a1544dfd21639260d1f98e1ba45feaea5">OpenConnection</a> </td>
-          <td>(</td>
-          <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>listener</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">int *&#160;</td>
-          <td class="paramname"><em>fdmax</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">fd_set *&#160;</td>
-          <td class="paramname"><em>master</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div>
-<div class="memdoc">
-
-</div>
-</div>
-<a class="anchor" id="a99661b405a324e79761947bec618bd11"></a><!-- doxytag: member="server.c::ProccessInput" ref="a99661b405a324e79761947bec618bd11" args="(struct ConnectionNode *conn, struct ProccessInputHandler *h, char *buf, size_t nbytes)" -->
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void <a class="el" href="../../d1/d20/server_8c.html#a99661b405a324e79761947bec618bd11">ProccessInput</a> </td>
-          <td>(</td>
-          <td class="paramtype">struct <a class="el" href="../../df/d3d/structConnectionNode.html">ConnectionNode</a> *&#160;</td>
-          <td class="paramname"><em>conn</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">struct <a class="el" href="../../da/dca/structProccessInputHandler.html">ProccessInputHandler</a> *&#160;</td>
-          <td class="paramname"><em>h</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">char *&#160;</td>
-          <td class="paramname"><em>buf</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">size_t&#160;</td>
-          <td class="paramname"><em>nbytes</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div>
-<div class="memdoc">
-
-</div>
-</div>
-<a class="anchor" id="ad6fba4bde478f009cb0e50fe4e8270a6"></a><!-- doxytag: member="server.c::ProccessInputFree" ref="ad6fba4bde478f009cb0e50fe4e8270a6" args="(struct ConnectionNode *i, struct ProccessInputHandler *h)" -->
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void <a class="el" href="../../d1/d20/server_8c.html#ad6fba4bde478f009cb0e50fe4e8270a6">ProccessInputFree</a> </td>
-          <td>(</td>
-          <td class="paramtype">struct <a class="el" href="../../df/d3d/structConnectionNode.html">ConnectionNode</a> *&#160;</td>
-          <td class="paramname"><em>i</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">struct <a class="el" href="../../da/dca/structProccessInputHandler.html">ProccessInputHandler</a> *&#160;</td>
-          <td class="paramname"><em>h</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
         </tr>
       </table>
 </div>
@@ -309,7 +183,7 @@ Functions</h2></td></tr>
 
 
 <hr class="footer"/><address class="footer"><small>
-Generated on Mon Mar 13 2017 06:27:42 for Ihlt Hopefully the Last Tracker by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Tue Mar 14 2017 03:42:42 for Ihlt Hopefully the Last Tracker by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="../../doxygen.png" alt="doxygen"/>
 </a> 1.7.6.1
 </small></address>
