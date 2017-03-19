@@ -51,8 +51,7 @@ int sock_send(int fd, char *src, size_t size) {
 		int sent = send(fd, ((char *) src) + offset, size - offset, 0);
 		if (sent == -1) {
 			if (errno != EAGAIN)
-				//shutdown(fd, SHUT_RDWR);
-				return sent;
+				return offset;
 			continue;
 		} else if (sent == 0) {
 			// when this returns zero, it generally means
